@@ -3,6 +3,10 @@
 --OFFICIAL DIRECTORY STRUCTURE--
 
 /Local_Directory
+  /Active Labeler Repo
+    api.py
+    ...
+    
   /Models
     /SSL
       SIMCLR_SSL_ssl.ckpt
