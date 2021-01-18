@@ -27,13 +27,11 @@
     im3.png
 
 '''
+#To Do (J): Change folder structure of swipe-labeler to match folder structure above
 
 DATA_PATH = './Dataset' #USER_PROVIDED
 
-
 ssl_train = f'python /content/SpaceForceDataSearch/ssl_dali_distrib.py --DATA_PATH {DATA_PATH} --encoder minicnn32  --num_workers 2 --log_name ssl --epochs 5 --batch_size 32'
-
-#exec this command 
 os.system(ssl_train)
 MODEL_PATH = "./Models/SSL/SIMCLR_SSL_ssl.ckpt"
 
