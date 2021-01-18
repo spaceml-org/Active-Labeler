@@ -36,7 +36,7 @@ os.system(ssl_train)
 MODEL_PATH = "./Models/SSL/SIMCLR_SSL_ssl.ckpt"
 
 #get reference images using model
-#to do (R): make this file
+#to do (Done) (R): make this file
 references = f'python deliver_candidates.py --DATA_PATH {DATA_PATH} --encoder {MODEL_PATH}  --num_workers 2 --batch_size 32 --num_candidates 200'
 os.system(references) #Now to_be_labeled is populated with candidate images
 TO_LABEL = "./to_be_labeled"
