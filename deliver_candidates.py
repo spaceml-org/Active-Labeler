@@ -39,7 +39,7 @@ def nearest_neighbors(embedding_matrix, search_matrix, N):
     
     normalized_dataset = dataset_scann / np.linalg.norm(dataset_scann, axis=1)[:, np.newaxis]
 
-    searcher = scann.scann_ops_pybind.builder(normalized_dataset, N, "dot_product").tree(num_leaves = int(np.sqrt(len(dataset_scann))), num_leaves_to_search = 10).score_brute_force().build() 
+    searcher = scann.scann_ops_pybind.builder(normalized_dataset, N+1, "dot_product").tree(num_leaves = int(np.sqrt(len(dataset_scann))), num_leaves_to_search = 10).score_brute_force().build() 
 
     neighbors, distances = searcher.search_batched(normalized_dataset)
     search_neighbors = neighbors[:search_matrix.shape[0], 1:].flatten()
@@ -49,7 +49,7 @@ def nearest_neighbors(embedding_matrix, search_matrix, N):
     #remove duplicates, references to search_matrix, and reindex 
     search_neighbors = pd.unique(search_neighbors) - search_matrix.shape[0]
   
-    return search_neighbors[search_neighbors >= 0]
+    return search_neighbors[search_neighbors >= 0][:N]
 
 def get_matrix(model, DATA_PATH, only_class = None):
     crop = transforms.RandomResizedCrop(size = input_height, scale=(1.0, 1.0), ratio=(1.0, 1.0), interpolation=2)
