@@ -69,3 +69,7 @@ def cli_main():
         get_more_candidates = f'python deliver_candidates.py --DATA_PATH {DATA_PATH} --encoder {MODEL_PATH}  --num_workers 2 --batch_size 32 --num_candidates 200'
         os.system(get_more_candidates)
         print('GOT MORE CANDIDATES DONE________')
+        
+   
+if __name__ == '__main__':
+    cli_main()
