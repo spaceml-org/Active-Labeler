@@ -52,7 +52,7 @@ def cli_main():
     print('SSL TRAINED________')
     #get reference images using model
     #to do (Done) (R): make this file
-    references = f"python /content/test_dir/Active-Labeller/deliver_candidates.py --DATA_PATH {DATA_PATH} --to_be_labeled {TO_LABEL} --MODEL_PATH {MODEL_PATH} --batch_size 32 --candidates 10  && wait"
+    references = f"python /content/test_dir/Active-Labeller/deliver_candidates.py --DATA_PATH {DATA_PATH} --to_be_labeled {TO_LABEL} --MODEL_PATH {MODEL_PATH} --batch_size 32 --candidates 40  && wait"
     os.system(references) #Now to_be_labeled is populated with candidate images
 
     print('CANDIDATES MOVED________')
@@ -65,12 +65,12 @@ def cli_main():
         os.system(labeler)
         print('LABELS DONE BEING LABELED________')
         #train a model
-        train_model = f'python SpaceForceDataSearch/finetuner_dali_distrib.py --DATA_PATH {local_folder+Labeled} --encoder {MODEL_PATH}  --num_workers 2 --log_name ft --epochs 5 --batch_size 32  && wait'
+        train_model = f"python SpaceForceDataSearch/finetuner_dali_distrib.py --DATA_PATH {local_folder + 'Labeled'} --encoder {MODEL_PATH} --num_workers 2 --log_name ft --epochs 5 --batch_size 3  && wait"
         os.system(train_model)
-        MODEL_PATH = local_folder + "Models/FineTune/FineTune_ft.ckpt"
+        MODEL_PATH = local_folder + "models/FineTune/FineTune_ft.ckpt"
         print('FINETUNING DONE________')
         
-        get_more_candidates = f"python /content/test_dir/Active-Labeller/deliver_candidates.py --DATA_PATH {DATA_PATH} --to_be_labeled {TO_LABEL} --MODEL_PATH {MODEL_PATH} --batch_size 32 --candidates 10  && wait"
+        get_more_candidates = f"python /content/test_dir/Active-Labeller/deliver_candidates.py --DATA_PATH {DATA_PATH} --to_be_labeled {TO_LABEL} --MODEL_PATH {MODEL_PATH} --batch_size 32 --candidates 40  && wait"
         os.system(get_more_candidates)
         print('GOT MORE CANDIDATES DONE________')
         
