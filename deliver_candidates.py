@@ -1,3 +1,8 @@
+import sys
+sys.path.insert(0, '/content/test_dir')
+sys.path.insert(0, '/content/test_dir/SpaceForceDataSearch')
+print(sys.path)
+
 from torchvision.datasets import ImageFolder
 from torchvision import transforms
 from torch.utils.data import DataLoader
@@ -7,10 +12,13 @@ import h5py
 import scann
 import pandas as pd
 from argparse import ArgumentParser
+import os
+import torch
+import numpy as np
 
 #Curator Imports
-from ssl_dali_distrib import SIMCLR
-from finetuner_dali_distrib import finetuner   
+from SpaceForceDataSearch.ssl_dali_distrib import SIMCLR 
+from SpaceForceDataSearch.finetuner_dali_distrib import finetuner
 
 def load_checkpoint(MODEL_PATH):
     #expects a checkpoint path, not an encoder
@@ -51,14 +59,14 @@ def nearest_neighbors(embedding_matrix, search_matrix, N):
   
     return search_neighbors[search_neighbors >= 0][:N]
 
-def get_matrix(model, DATA_PATH, only_class = None):
+def get_matrix(model, DATA_PATH, only_class = None, input_height = 256, batch_size = 32):
     crop = transforms.RandomResizedCrop(size = input_height, scale=(1.0, 1.0), ratio=(1.0, 1.0), interpolation=2)
     tensor = transforms.ToTensor()
     t = transforms.Compose([crop, tensor])
     dataset = ImageFolder(DATA_PATH, transform=t)
     loader = DataLoader(dataset, batch_size = batch_size, shuffle = False, pin_memory=True) 
 
-    m_size = model.num_classes if is_classifier else model.embedding_size
+    m_size = model.num_classes if model.is_classifier else model.embedding_size
 
     embedding_matrix = torch.empty((0, m_size)).cuda()
 
@@ -78,6 +86,7 @@ def get_matrix(model, DATA_PATH, only_class = None):
 def cli_main():
     parser = ArgumentParser()
     parser.add_argument("--DATA_PATH", type=str, help="path to folders with images")
+    parser.add_argument('--to_be_labeled', type=str, help='folder with images to be labeled')
     parser.add_argument("--MODEL_PATH", default=None, type=str, help="classifier checkpoint or SSL checkpoint")
     parser.add_argument("--batch_size", default=128, type=int, help="batch size for SSL")
     parser.add_argument("--candidates", default=200, type=int, help="number of candidates to populate /To_Be_Labeled Folder")
@@ -89,28 +98,30 @@ def cli_main():
     batch_size = args.batch_size
     N = args.candidates
     input_height = args.image_size
+    TO_LABEL = args.to_be_labeled
 
     model, is_classifier = load_checkpoint(MODEL_PATH)
+    model.is_classifier = is_classifier
     model.eval()
     model.cuda()
-    embedding_matrix, file_list = get_matrix(model, DATA_PATH)
+    embedding_matrix, file_list = get_matrix(model, DATA_PATH, input_height = input_height, batch_size = batch_size)
 
-    if is_classifier:
+    if not is_classifier:
         #get indecisives
         idxs = np.argsort(embedding_matrix.std(axis = 1))[:N]
     else:
         #get nearest neighbors idx
-        search_matrix, _ = get_matrix(model, './Labeled', only_class = '1')
+        search_matrix, _ = get_matrix(model, '/'.join(TO_LABEL.split('/')[:-1]) + '/Labeled', only_class = '1', input_height = input_height,  batch_size = batch_size)
         idxs = nearest_neighbors(embedding_matrix, search_matrix, N)
 
     files = file_list[idxs]
 
     #moves files to the "./To_Be_Labeled" Folder
 
-    Path('./To_Be_Labeled/').mkdir(exist_ok=True)
+    Path(TO_LABEL).mkdir(exist_ok=True)
 
     for f in files:
-      os.rename(f, f"./To_Be_Labeled/{f.split('/')[-1]}")
+      os.rename(f, f"{TO_LABEL}/{f.split('/')[-1]}")
 
 if __name__ == '__main__':
     cli_main()
