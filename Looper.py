@@ -39,18 +39,22 @@ def cli_main():
     parser.add_argument('--batch_size', type=int, help='how many items to label')
     parser.add_argument('--DATA_PATH', type=str, help='path to data')
     
+    local_folder = "/content/test_dir/"
+    args = parser.parse_args()
+    
     DATA_PATH = args.DATA_PATH
     batch_size = args.batch_size
-    
+    TO_LABEL = local_folder + "To_Be_Labeled"
+
     ssl_train = f'python SpaceForceDataSearch/ssl_dali_distrib.py --DATA_PATH {DATA_PATH} --encoder minicnn32  --num_workers 2 --log_name ssl --epochs 5 --batch_size 32  && wait'
     os.system(ssl_train)
-    MODEL_PATH = "./Models/SSL/SIMCLR_SSL_ssl.ckpt"
+    MODEL_PATH = local_folder + "models/SSL/SIMCLR_SSL_ssl.ckpt"
     print('SSL TRAINED________')
     #get reference images using model
     #to do (Done) (R): make this file
-    references = f'python Active-Labeller/deliver_candidates.py --DATA_PATH {DATA_PATH} --encoder {MODEL_PATH}  --num_workers 2 --batch_size 32 --num_candidates 200  && wait'
+    references = f"python /content/test_dir/Active-Labeller/deliver_candidates.py --DATA_PATH {DATA_PATH} --to_be_labeled {TO_LABEL} --MODEL_PATH {MODEL_PATH} --batch_size 32 --candidates 10  && wait"
     os.system(references) #Now to_be_labeled is populated with candidate images
-    TO_LABEL = "./To_Be_Labeled"
+
     print('CANDIDATES MOVED________')
     num_steps = 3
     for i in range(num_steps):
@@ -61,12 +65,12 @@ def cli_main():
         os.system(labeler)
         print('LABELS DONE BEING LABELED________')
         #train a model
-        train_model = f'python SpaceForceDataSearch/finetuner_dali_distrib.py --DATA_PATH "./Labeled" --encoder {MODEL_PATH}  --num_workers 2 --log_name ft --epochs 5 --batch_size 32  && wait'
+        train_model = f'python SpaceForceDataSearch/finetuner_dali_distrib.py --DATA_PATH {local_folder+Labeled} --encoder {MODEL_PATH}  --num_workers 2 --log_name ft --epochs 5 --batch_size 32  && wait'
         os.system(train_model)
-        MODEL_PATH = "./Models/FineTune/FineTune_ft.ckpt"
+        MODEL_PATH = local_folder + "Models/FineTune/FineTune_ft.ckpt"
         print('FINETUNING DONE________')
         
-        get_more_candidates = f'python deliver_candidates.py --DATA_PATH {DATA_PATH} --encoder {MODEL_PATH}  --num_workers 2 --batch_size 32 --num_candidates 200'
+        get_more_candidates = f"python /content/test_dir/Active-Labeller/deliver_candidates.py --DATA_PATH {DATA_PATH} --to_be_labeled {TO_LABEL} --MODEL_PATH {MODEL_PATH} --batch_size 32 --candidates 10  && wait"
         os.system(get_more_candidates)
         print('GOT MORE CANDIDATES DONE________')
         
