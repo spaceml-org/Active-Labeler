@@ -52,7 +52,7 @@ def cli_main():
     print('SSL TRAINED________')
     #get reference images using model
     #to do (Done) (R): make this file
-    references = f"python /content/test_dir/Active-Labeller/deliver_candidates.py --DATA_PATH {DATA_PATH} --to_be_labeled {TO_LABEL} --MODEL_PATH {MODEL_PATH} --batch_size 32 --candidates 40  && wait"
+    references = f"python /content/test_dir/Active-Labeller/deliver_candidates.py --DATA_PATH {DATA_PATH} --to_be_labeled {TO_LABEL} --MODEL_PATH {MODEL_PATH} --batch_size 3 --candidates 40  && wait"
     os.system(references) #Now to_be_labeled is populated with candidate images
 
     print('CANDIDATES MOVED________')
