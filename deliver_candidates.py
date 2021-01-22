@@ -50,7 +50,7 @@ def nearest_neighbors(embedding_matrix, search_matrix, N):
     searcher = scann.scann_ops_pybind.builder(normalized_dataset, N+1, "dot_product").tree(num_leaves = int(np.sqrt(len(dataset_scann))), num_leaves_to_search = 10).score_brute_force().build() 
 
     neighbors, distances = searcher.search_batched(normalized_dataset)
-    search_neighbors = neighbors[:search_matrix.shape[0], 1:].flatten()
+    search_neighbors = neighbors[:search_matrix.shape[0], 1:].flatten().astype(np.int32)
     
     os.remove('./temp_embedding_data.h5')
 
