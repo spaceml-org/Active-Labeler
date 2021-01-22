@@ -46,7 +46,7 @@ def cli_main():
     batch_size = args.batch_size
     TO_LABEL = local_folder + "To_Be_Labeled"
 
-    ssl_train = f'python SpaceForceDataSearch/ssl_dali_distrib.py --DATA_PATH {DATA_PATH} --encoder minicnn32  --num_workers 2 --log_name ssl --epochs 5 --batch_size 32  && wait'
+    ssl_train = f'python SpaceForceDataSearch/ssl_dali_distrib.py --DATA_PATH {DATA_PATH} --encoder minicnn32  --num_workers 2 --log_name ssl --epochs 5 --batch_size 3  && wait'
     os.system(ssl_train)
     MODEL_PATH = local_folder + "models/SSL/SIMCLR_SSL_ssl.ckpt"
     print('SSL TRAINED________')
