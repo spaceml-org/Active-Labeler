@@ -50,13 +50,14 @@ def nearest_neighbors(embedding_matrix, search_matrix, N):
     searcher = scann.scann_ops_pybind.builder(normalized_dataset, N+1, "dot_product").tree(num_leaves = int(np.sqrt(len(dataset_scann))), num_leaves_to_search = 10).score_brute_force().build() 
 
     neighbors, distances = searcher.search_batched(normalized_dataset)
+    print(neighbors)
     search_neighbors = neighbors[:search_matrix.shape[0], 1:].flatten().astype(np.int32)
-    
     os.remove('./temp_embedding_data.h5')
-
+    print(search_neighbors)
     #remove duplicates, references to search_matrix, and reindex 
     search_neighbors = pd.unique(search_neighbors) - search_matrix.shape[0]
-  
+    print(search_neighbors)
+    print(N)
     return search_neighbors[search_neighbors >= 0][:N]
 
 def get_matrix(model, DATA_PATH, only_class = None, input_height = 256, batch_size = 32):
@@ -104,13 +105,14 @@ def cli_main():
     model.is_classifier = is_classifier
     model.eval()
     model.cuda()
-    embedding_matrix, file_list = get_matrix(model, DATA_PATH, input_height = input_height, batch_size = batch_size)
 
-    if not is_classifier:
+    if is_classifier:
         #get indecisives
+        embedding_matrix, file_list = get_matrix(model, '/'.join(TO_LABEL.split('/')[:-1]) + '/Labeled', input_height = input_height, batch_size = batch_size)
         idxs = np.argsort(embedding_matrix.std(axis = 1))[:N]
     else:
         #get nearest neighbors idx
+        embedding_matrix, file_list = get_matrix(model, DATA_PATH, input_height = input_height, batch_size = batch_size)
         search_matrix, _ = get_matrix(model, '/'.join(TO_LABEL.split('/')[:-1]) + '/Labeled', only_class = '1', input_height = input_height,  batch_size = batch_size)
         idxs = nearest_neighbors(embedding_matrix, search_matrix, N)
 
