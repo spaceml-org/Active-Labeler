@@ -6,7 +6,7 @@ import yaml
 #Internal imports
 sys.path.insert(0,"./Self-Supervised-Learner")
 sys.path.insert(1,"./ActiveLabelerModels")
-from model import SIMCLR, SIMSIAM
+from models import SIMCLR, SIMSIAM
 from .Linear_models import SSLEvaluator
 from .ClassifierModel import ClassifierModel
 
@@ -24,9 +24,9 @@ class TrainModels():
         self.log_count = 0
 
         if self.parameters['encoder']['encoder_type'] == "SIMCLR":
-            self.encoder = SIMCLR.SIMCLR.load_from_checkpoint(self.parameters['encoder']['encoder_path'], unlabled_dataset_path)
+            self.encoder = SIMCLR.SIMCLR.load_from_checkpoint(self.parameters['encoder']['encoder_path'], DATA_PATH=unlabled_dataset_path)
         elif self.parameters['encoder']['encoder_type'] == "SIMSIAM":
-            self.encoder = SIMSIAM.SIMSIAM.load_from_checkpoint(self.parameters['encoder']['encoder_path'], unlabled_dataset_path)
+            self.encoder = SIMSIAM.SIMSIAM.load_from_checkpoint(self.parameters['encoder']['encoder_path'], DATA_PATH=unlabled_dataset_path)
 
         if self.parameters['classifier']['classifier_type'] == "SSLEvaluator":
             self.linear_model = SSLEvaluator(
