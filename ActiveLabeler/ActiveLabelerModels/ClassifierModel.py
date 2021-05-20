@@ -10,28 +10,28 @@ class ClassifierModel(pl.LightningModule): #SSLFineTuner
     def __init__(self, parameters, encoder, linear_model):
         # Init
         super().__init__()
-        self.parameters = parameters
+        self.model_params = parameters
         # Models
         self.encoder = encoder
         self.linear_model = linear_model
 
         #Encoder parameters
-        self.embedding_size = self.parameters['encoder']['e_embedding_size']
-        self.lr_encoder = self.parameters['encoder']['e_lr']
-        self.train_encoder = self.parameters['encoder']['train_encoder']
+        self.embedding_size = self.model_params['encoder']['e_embedding_size']
+        self.lr_encoder = float(self.model_params['encoder']['e_lr'])
+        self.train_encoder = self.model_params['encoder']['train_encoder']
 
         #Parameters for Classifier model
-        self.num_classes = self.parameters['classifier']['c_num_classes']
-        self.hidden_dim = self.parameters['classifier']['c_hidden_dim']
-        self.lr = self.parameters['classifier']['c_linear_lr']
-        self.dropout = self.parameters['classifier']['c_dropout']
-        self.scheduler_type = self.parameters['classifier']['c_scheduler_type'] 
-        self.gamma = self.parameters['classifier']['c_gamma']
-        self.decay_epochs = self.parameters['classifier']['c_decay_epochs']
-        self.weight_decay = self.parameters['classifier']['c_weight_decay']
-        self.final_lr = self.parameters['classifier']['c_final_lr']
-        self.momentum = self.parameters['classifier']['c_momentum']
-        self.weights = self.parameters['classifier']['c_weights']
+        self.num_classes = self.model_params['classifier']['c_num_classes']
+        self.hidden_dim = self.model_params['classifier']['c_hidden_dim']
+        self.lr = float(self.model_params['classifier']['c_linear_lr'])
+        self.dropout = self.model_params['classifier']['c_dropout']
+        self.scheduler_type = self.model_params['classifier']['c_scheduler_type'] 
+        self.gamma = self.model_params['classifier']['c_gamma']
+        self.decay_epochs = self.model_params['classifier']['c_decay_epochs']
+        self.weight_decay = float(self.model_params['classifier']['c_weight_decay'])
+        self.final_lr = float(self.model_params['classifier']['c_final_lr'])
+        self.momentum = self.model_params['classifier']['c_momentum']
+        self.weights = self.model_params['classifier']['c_weights']
         if self.weights is not None:
             self.weights = torch.tensor([float(item) for item in self.weights.split(',')])
             self.weights = self.weights.cuda()
@@ -39,13 +39,13 @@ class ClassifierModel(pl.LightningModule): #SSLFineTuner
             self.weights = None
 
         #Training parameters
-        self.epochs = self.parameters['training']['epochs']
+        self.epochs = self.model_params['training']['epochs']
         self.train_acc = Accuracy()
         self.val_acc = Accuracy(compute_on_step=False)
 
         #Other parameters
-        self.seed = self.parameters['miscellaneous']['seed']
-        self.cpus = self.parameters['miscellaneous']['cpus']
+        self.seed = self.model_params['miscellaneous']['seed']
+        self.cpus = self.model_params['miscellaneous']['cpus']
 
 
         self.save_hyperparameters()
@@ -58,6 +58,7 @@ class ClassifierModel(pl.LightningModule): #SSLFineTuner
                     ], momentum=self.momentum)
         else:
             optimizer = SGD([
+                    {'params': self.encoder.parameters(), 'lr': 0},
                     {'params': self.linear_model.parameters(), 'lr': self.lr}
                     ], momentum=self.momentum)
 
