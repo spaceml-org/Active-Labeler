@@ -1,6 +1,4 @@
 # Active Labeler
-<div align="center">
-
 <img src="https://github.com/spaceml-org/Active-Labeller/blob/main/readme_banner.jpeg" >
 
 "When the neural network in your head has been trained to label images, but not to code"
