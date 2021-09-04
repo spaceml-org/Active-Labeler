@@ -50,6 +50,7 @@ __Pipeline Config__
 Arguments used by the main pipeline. 
 
 ```--model_type```: Type of Self-Supervised Learning model used - SimCLR or SimSiam
+
 ```--model_path```: Path to the .ckpt file containing the model (.ckpt file is obtained by training with [Self-Supervised Learner](https://github.com/spaceml-org/Self-Supervised-Learner)
 ```--image_size```: Size of input images
 ```--embedding_size```: Size of model's output representations 
