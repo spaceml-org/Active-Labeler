@@ -1,11 +1,11 @@
 # Active Labeler
+
 <img src="https://github.com/spaceml-org/Active-Labeller/blob/main/readme_banner.jpeg" >
 
 "When the neural network in your head has been trained to label images, but not to code"
 The Active Labeller is a CLI Tool that facilitates labeling datasets with just a SINGLE line of code. The tool comes fully equipped with various Active Learning strategies and other customizable features to suit one’s requirements.
 
-## (Not Necessary) Jargon
-### What is Active Learning?
+## What is Active Learning?
 Bringing about a model’s full potential with limited data is the core concept behind Active Learning. This follows several strategies and other techniques that identify points based on a model’s difficulty in understanding them. 
 Some of the strategies present in this tool includes:
 -  Random
@@ -16,8 +16,8 @@ Some of the strategies present in this tool includes:
     * Gaussian function is used to pick examples based on their predicitons and a gaussian curve. 
 
 
-## Swipe Labeller: (hyper linked to that page)
-Swipe Labeller is a GUI based tool to enable labelling of data.
+## Swipe Labeller:
+[Swipe Labeller](https://github.com/spaceml-org/Swipe-Labeler) is a GUI based tool to enable labelling of data.
 Supports:
 - Multi-user labelling
 - Compatibility with Mobile devices
@@ -25,12 +25,10 @@ Supports:
 Images will be picked one by one from your unlabeled images directory, and presented through the Swipe Labeler GUI. For each image, the user can choose to classify the image as a positive or negative/absent class using the “Accept” or “Reject” button. 
 For more info on how to install and use [check](https://github.com/spaceml-org/Swipe-Labeler)
 
-## Installation
-{}
-
-Your data must be in the following format to be used by the pipeline:
+## Setup
+Your data must be in the following format, inside a subdirectory, to be used by the pipeline:
 ```
-/Dataset
+/Dataset/Unlabeled
     Image1.png
     Image2.png
     Image3.png
@@ -40,24 +38,32 @@ Your data must be in the following format to be used by the pipeline:
 
 * For Colab-friendly version and general examples check [colab]()
 * For a CLI-Version, simply do 
-    ```py
-    python3 main.py --pipelineconfig path_to_config.json
-    ```
+   
+  - Clone the code
+   
+      ```git clone https://github.com/spaceml-org/Active-Labeller.git```
+   
+  - Install requirements
 
-__Mandatory Arguments__
+      ```pip install -r requirements.txt```
+   
+  - Run the application
+   
+      ```py python3 main.py --config_path {path_to_config.yml} --class_name {positive_class_name}```
 
-__Pipeline Config__
-Arguments used by the main pipeline. 
+## Mandatory Arguments
 
-```--model_type```: Type of Self-Supervised Learning model used - SimCLR or SimSiam
+__Pipeline Config__: Arguments used by the main pipeline. 
 
-```--model_path```: Path to the .ckpt file containing the model (.ckpt file is obtained by training with [Self-Supervised Learner](https://github.com/spaceml-org/Self-Supervised-Learner)
+```--model_type```:     Type of Self-Supervised Learning model used - SimCLR or SimSiam
 
-```--image_size```: Size of input images
+```--model_path```:     Path to the .ckpt file containing the model (.ckpt file is obtained by training with [Self-Supervised Learner](https://github.com/spaceml-org/Self-Supervised-Learner)
+
+```--image_size```:     Size of input images
 
 ```--embedding_size```: Size of model's output representations 
 
-```--verbose```: 1 prints all logs, 0 prints important logs
+```--verbose```:        1 prints all logs, 0 prints important logs
 
 ```--seed```: Seed used to save the state of a random functions used in the main pipeline for reproducibility 
 
@@ -115,10 +121,9 @@ Arguments used by the main pipeline.
 
 ```--seed_data_path```: Path to your existing seed_dataset
 
+<br>
 
-
-__Model Config__
-Arguments related to model training. 
+__Model Config__: Arguments related to model training. 
 
 ```--encoder_type```: Type of Self-Supervised Learning model used - SimCLR or SimSiam
 
