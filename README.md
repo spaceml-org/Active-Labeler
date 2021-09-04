@@ -49,7 +49,7 @@ Your data must be in the following format, inside a subdirectory, to be used by 
    
   - Run the application
    
-      ```py python3 main.py --config_path {path_to_config.yml} --class_name {positive_class_name}```
+      ```python3 main.py --config_path {path_to_config.yml} --class_name {positive_class_name}```
 
 ## Mandatory Arguments
 
