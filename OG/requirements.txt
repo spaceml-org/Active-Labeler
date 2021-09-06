@@ -1,2 +1,0 @@
-git+https://github.com/spaceml-org/Self-Supervised-Learner.git
-scann==1.2.1

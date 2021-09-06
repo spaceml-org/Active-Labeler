@@ -1,0 +1,56 @@
+model:
+  model_type:       simclr
+  model_path:       /content/RESISC45-imagenet_resnet18.ckpt
+  image_size:       256
+  embedding_size:   512
+
+verbose: 1
+seed: 100
+
+
+data:
+  data_path:        /content/Dataset
+
+test: #TODO
+  metrics: 1
+  metric_csv_path: /content/metrics.csv
+  prob_csv_path:   /content/prob.csv
+  test_path:       /content/TestData
+
+nn:
+  ref_img_path:     /content/RESISC45/airplane/airplane_001.jpg
+  simulate_label:   False #TODO
+  unlabled_path:    /content/runtime/swipe/unlabeled
+  labeled_path:     /content/runtime/swipe/labeled #todo needed ?
+  positive_path:    /content/runtime/swipe/labeled/positive
+  negative_path:    /content/runtime/swipe/labeled/negative
+  unsure_path:      /content/runtime/swipe/unsure
+  swipelabel_batch_size: 5
+  swipe_dir: /content/AL_final
+
+annoy:
+    num_trees:      50
+    annoy_path:     /content/runtime/NN_local/annoy_file.ann
+
+TrainModels:
+  config_path:     /content/AL_final/model_config.yaml
+
+ActiveLabeler:
+  sample_size:      20
+  sampling_strategy: "gaussian" #"uncertainty_balanced" # "random" #"uncertainty"
+  batch_size: 128
+
+AL_main:
+  newly_labled_path:  /content/new_label
+  archive_path:       /content/runtime/swipe/archive
+  nn:                 0
+  n_closest:          5
+  al_folder:          /content/runtime/AL
+  train_dataset_batch_size : 32
+
+seed_dataset:
+ nn: 1 #put ref img here
+ seed_data_path: /content/seed_dataset
+
+
+
