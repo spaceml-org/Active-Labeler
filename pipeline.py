@@ -1,7 +1,8 @@
 import shutil
 import torch
 import requests
-
+from IPython import get_ipython
+from IPython import get_ipython
 from tqdm.notebook import tqdm
 from torchvision import transforms
 import os
@@ -249,6 +250,17 @@ class Pipeline:
         ori_labled = len(list(paths.list_images(labeled_path)))
         ori_pos = len(list(paths.list_images(positive_path)))
         ori_neg = len(list(paths.list_images(negative_path)))
+
+        #simulate labeling
+        if self.parameters["nn"]["simulate_label"]:
+            for img in list(paths.list_images(unlabled_path)):
+                src = unlabled_path + "/" + img.split("/")[-1]
+                dest = (
+                    (positive_path + "/" + img.split("/")[-1])
+                    if self.class_name in img
+                    else (negative_path + "/" + img.split("/")[-1])
+                )
+                shutil.move(src, dest)
 
         #swipe labeler
         else:
