@@ -19,6 +19,7 @@ test: #TODO
 
 nn:
   ref_img_path:     /content/RESISC45/airplane/airplane_001.jpg
+  simulate_label:   False #TODO
   unlabled_path:    /content/runtime/swipe/unlabeled
   labeled_path:     /content/runtime/swipe/labeled #todo needed ?
   positive_path:    /content/runtime/swipe/labeled/positive
