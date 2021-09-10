@@ -209,3 +209,7 @@ class TrainModels:
     def get_model(self):
         """Returns the classification model"""
         return self.model
+
+    def save_model(self):
+        """Saves the model to the specified path"""
+        torch.save(self.model, self.model_path)
