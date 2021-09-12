@@ -15,9 +15,6 @@ from argparse import ArgumentParser
 from pipeline import Pipeline
 import shutil
 
-
-#TODO need to incorporate setting up dataset like dummy dataset, etc. that is there on colab here
-
 def main():
     parser = ArgumentParser()
     parser.add_argument("--config_path", type=str, help="Path to config file")
@@ -74,9 +71,6 @@ def main():
 
 if __name__ == '__main__':
     main()
-
-
- #todo folders need to be created if not created , and if not specified have defaults
 
 
 
