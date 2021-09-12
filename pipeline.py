@@ -109,8 +109,7 @@ class Pipeline:
             "actual_pos_imgs_0.5": [],
         }
         self.prediction_prob = {}
-        #todo
-        self.parameters= {}
+        self.parameters= self.load_config(self.config_path)
 
     # similiarity search class
     def get_annoy_tree(self, num_nodes, embeddings, num_trees, annoy_path):
@@ -436,9 +435,7 @@ class Pipeline:
         # +++++++++++++++++++++++++++++++++++++++++++++++++++++
         # seed dataset
 
-        logging.info("load config")
-        parameters = self.load_config(self.config_path)
-        #todo
+        logging.info("load config") #todo
         self.parameters = self.load_config(self.config_path)
 
         # directories
@@ -462,51 +459,51 @@ class Pipeline:
 
         logging.info("load model")
         model = self.load_model(
-            parameters["model"]["model_type"],
-            parameters["model"]["model_path"],
-            parameters["data"]["data_path"],
+            self.parameters["model"]["model_type"],
+            self.parameters["model"]["model_path"],
+            self.parameters["data"]["data_path"],
         )
 
-        tmp = list(paths.list_images(parameters["data"]["data_path"]))
+        tmp = list(paths.list_images(self.parameters["data"]["data_path"]))
         self.unlabeled_list = [i.split("/")[-1] for i in tmp]
         self.dataset_paths = [i.split("/")[-1] for i in tmp]
 
         logging.info("initialize_embeddings")
         self.initialize_embeddings(
-            parameters["model"]["image_size"],
-            parameters["model"]["embedding_size"],
+            self.parameters["model"]["image_size"],
+            self.parameters["model"]["embedding_size"],
             model,
             self.dataset_paths,
-            parameters["model"]["embedding_size"],
-            parameters["annoy"]["num_trees"],
-            parameters["annoy"]["annoy_path"],
+            self.parameters["model"]["embedding_size"],
+            self.parameters["annoy"]["num_trees"],
+            self.parameters["annoy"]["annoy_path"],
         )
 
 
         #todo continuation
-        if parameters["seed_dataset"]["nn"] == 1:
+        if self.parameters["seed_dataset"]["nn"] == 1:
             logging.info("create_seed_dataset")
             self.labled_list = []
             self.create_seed_dataset(
                 model,
             )
-            newly_labled_path = parameters["nn"]["labeled_path"]
+            newly_labled_path = self.parameters["nn"]["labeled_path"]
 
         else:
             self.labled_list = [
                 i.split("/")[-1]
                 for i in list(
-                    paths.list_images(parameters["seed_dataset"]["seed_data_path"])
+                    paths.list_images(self.parameters["seed_dataset"]["seed_data_path"])
                 )
             ]
             for i in self.labled_list:
                 self.unlabeled_list.remove(i)
-            newly_labled_path = parameters["seed_dataset"]["seed_data_path"] #todo: put seed inside labeled path ?
+            newly_labled_path = self.parameters["seed_dataset"]["seed_data_path"] #todo: put seed inside labeled path ?
 
         # +++++++++++++++++++++++++++++++++++++++++++++++++++++
         # AL - linear and finetuning
 
-        os.chdir(parameters["AL_main"]["al_folder"])
+        os.chdir(self.parameters["AL_main"]["al_folder"])
         logging.info("active_labeling")
         logging.info(
             "Initializing active labeler and train models class objects."
@@ -516,7 +513,7 @@ class Pipeline:
         activelabeler = ActiveLabeler(
             self.create_emb_list(self.unlabeled_list),
             [
-                parameters["data"]["data_path"] + "/Unlabeled/" + image_name
+                self.parameters["data"]["data_path"] + "/Unlabeled/" + image_name
                 for image_name in self.unlabeled_list
             ],
             self.parameters['model']['image_size'],
@@ -525,9 +522,9 @@ class Pipeline:
         )
 
         train_models = TrainModels(
-            parameters["TrainModels"]["config_path"],
+            self.parameters["TrainModels"]["config_path"],
             "./", #todo check if this is right or put in config file
-            parameters["data"]["data_path"],
+            self.parameters["data"]["data_path"],
             "AL",
         )  # todo saved model path # datapath => sub directory structure for datapath arg
 
@@ -538,8 +535,8 @@ class Pipeline:
             [
                 transforms.Resize(
                     (
-                        parameters["model"]["image_size"],
-                        parameters["model"]["image_size"],
+                        self.parameters["model"]["image_size"],
+                        self.parameters["model"]["image_size"],
                     )
                 ),
                 transforms.Lambda(to_tensor),
@@ -578,14 +575,14 @@ class Pipeline:
                 #create archive labeled images emb mapping
                 if iteration == 1:
                     emb_dataset_archive = self.create_emb_label_mapping(
-                        parameters["nn"]["labeled_path"] + "/positive",
-                        parameters["nn"]["labeled_path"] + "/negative",
+                        self.parameters["nn"]["labeled_path"] + "/positive",
+                        self.parameters["nn"]["labeled_path"] + "/negative",
                     )
 
                 else:
                     emb_dataset_archive = self.create_emb_label_mapping(
-                        parameters["AL_main"]["archive_path"] + "/positive",
-                        parameters["AL_main"]["archive_path"] + "/negative",
+                        self.parameters["AL_main"]["archive_path"] + "/positive",
+                        self.parameters["AL_main"]["archive_path"] + "/negative",
                     )
 
                 #newly labled + archive emb mapping
@@ -599,7 +596,7 @@ class Pipeline:
                     ) + len(
                         list(
                             paths.list_images(
-                                parameters["AL_main"]["archive_path"] + "/positive"
+                                self.parameters["AL_main"]["archive_path"] + "/positive"
                             )
                         )
                     )
@@ -608,7 +605,7 @@ class Pipeline:
                     ) + len(
                         list(
                             paths.list_images(
-                                parameters["AL_main"]["archive_path"] + "/negative"
+                                self.parameters["AL_main"]["archive_path"] + "/negative"
                             )
                         )
                     )
@@ -634,10 +631,10 @@ class Pipeline:
 
             # put seed dataset/newly labeled data in archive path and clear newly labeled
             for img in list(paths.list_images(newly_labled_path + "/positive")):
-                shutil.copy(img, parameters["AL_main"]["archive_path"] + "/positive")
+                shutil.copy(img, self.parameters["AL_main"]["archive_path"] + "/positive")
             for img in list(paths.list_images(newly_labled_path + "/negative")):
-                shutil.copy(img, parameters["AL_main"]["archive_path"] + "/negative")
-            newly_labled_path = parameters["AL_main"]["newly_labled_path"]
+                shutil.copy(img, self.parameters["AL_main"]["archive_path"] + "/negative")
+            newly_labled_path = self.parameters["AL_main"]["newly_labled_path"]
             for img in list(paths.list_images(newly_labled_path)):
                 os.remove(img)
 
@@ -650,14 +647,14 @@ class Pipeline:
                     tmp_p = len(
                         list(
                             paths.list_images(
-                                parameters["AL_main"]["archive_path"] + "/positive"
+                                self.parameters["AL_main"]["archive_path"] + "/positive"
                             )
                         )
                     ) + len(list(paths.list_images(newly_labled_path + "/positive")))
                     tmp_n = len(
                         list(
                             paths.list_images(
-                                parameters["AL_main"]["archive_path"] + "/negative"
+                                self.parameters["AL_main"]["archive_path"] + "/negative"
                             )
                         )
                     ) + len(list(paths.list_images(newly_labled_path + "/negative")))
@@ -668,7 +665,7 @@ class Pipeline:
 
                 #training and validation datasets
                 archive_dataset = torchvision.datasets.ImageFolder(
-                    parameters["AL_main"]["archive_path"], t
+                    self.parameters["AL_main"]["archive_path"], t
                 )
                 n_80 = (len(archive_dataset) * 8) // 10
                 n_20 = len(archive_dataset) - n_80
@@ -688,13 +685,13 @@ class Pipeline:
                 logging.info("regenerate embeddings")
                 encoder = train_models.get_model().to("cuda")  # todo device
                 self.initialize_embeddings(
-                    parameters["model"]["image_size"],
-                    parameters["model"]["embedding_size"],
+                    self.parameters["model"]["image_size"],
+                    self.parameters["model"]["embedding_size"],
                     encoder,
                     self.dataset_paths,
-                    parameters["model"]["embedding_size"],
-                    parameters["annoy"]["num_trees"],
-                    parameters["annoy"]["annoy_path"],
+                    self.parameters["model"]["embedding_size"],
+                    self.parameters["annoy"]["num_trees"],
+                    self.parameters["annoy"]["annoy_path"],
                     "encoder",
                 )
 
@@ -703,7 +700,7 @@ class Pipeline:
                 activelabeler.get_embeddings_offline(
                     mapping,
                     [
-                        parameters["data"]["data_path"] + "/Unlabeled/" + image_name
+                        self.parameters["data"]["data_path"] + "/Unlabeled/" + image_name
                         for image_name in self.unlabeled_list
                     ],
                 )
@@ -719,18 +716,18 @@ class Pipeline:
                 strategy_images,
             ) = activelabeler.get_images_to_label_offline(
                 train_models.get_model(),
-                parameters["ActiveLabeler"]["sampling_strategy"],
-                parameters["ActiveLabeler"]["sample_size"],
+                self.parameters["ActiveLabeler"]["sampling_strategy"],
+                self.parameters["ActiveLabeler"]["sample_size"],
                 None,
                 "cuda"
             )
 
             #nn and label
-            if parameters["AL_main"]["nn"] == 1:
+            if self.parameters["AL_main"]["nn"] == 1:
                 embs = self.find_emb(strategy_images)
                 imgs = self.search_similar(
                     strategy_images,
-                    int(parameters["AL_main"]["n_closest"]),
+                    int(self.parameters["AL_main"]["n_closest"]),
                     curr_model,
                     embs,
                 )
@@ -744,9 +741,9 @@ class Pipeline:
             else:
                 imgs = strategy_images
 
-            self.parameters['nn']['labeled_path'] =parameters['AL_main']['newly_labled_path']
-            self.parameters['nn']['positive_path'] = parameters['AL_main']['newly_labled_path'] + "/positive"
-            self.parameters['nn']['negative_path']= parameters['AL_main']['newly_labled_path'] + "/negative"
+            self.parameters['nn']['labeled_path'] =self.parameters['AL_main']['newly_labled_path']
+            self.parameters['nn']['positive_path'] = self.parameters['AL_main']['newly_labled_path'] + "/positive"
+            self.parameters['nn']['negative_path']= self.parameters['AL_main']['newly_labled_path'] + "/negative"
 
             self.label_data(imgs)
 
@@ -754,7 +751,7 @@ class Pipeline:
             tmp1 = len(
                 list(
                     paths.list_images(
-                        parameters["AL_main"]["archive_path"] + "/positive"
+                        self.parameters["AL_main"]["archive_path"] + "/positive"
                     )
                 )
             )
@@ -762,7 +759,7 @@ class Pipeline:
             tmp3 = len(
                 list(
                     paths.list_images(
-                        parameters["AL_main"]["archive_path"] + "/negative"
+                        self.parameters["AL_main"]["archive_path"] + "/negative"
                     )
                 )
             )
@@ -784,7 +781,7 @@ class Pipeline:
             activelabeler.get_embeddings_offline(
                 mapping,
                 [
-                    parameters["data"]["data_path"] + "/Unlabeled/" + image_name
+                    self.parameters["data"]["data_path"] + "/Unlabeled/" + image_name
                     for image_name in self.unlabeled_list
                 ],
             )
@@ -793,14 +790,14 @@ class Pipeline:
             train_models.save_model()
 
             # --TEST
-            if parameters['test']['metrics']:
+            if self.parameters['test']['metrics']:
 
                 # step, class, model_type append in main
                 self.metrics["step"].append(iteration)
                 self.metrics["class"].append(self.class_name)
                 self.metrics["model_type"].append(input_counter)
 
-                self.test_data(train_models.get_model(), parameters["test"]["test_path"], t)
+                self.test_data(train_models.get_model(), self.parameters["test"]["test_path"], t)
 
                 #prob metrics
 
@@ -858,7 +855,7 @@ class Pipeline:
                 df = pd.DataFrame.from_dict(
                     self.prediction_prob, orient="index"
                 ).transpose()
-                df.to_csv(parameters["test"]["prob_csv_path"], index=False)
+                df.to_csv(self.parameters["test"]["prob_csv_path"], index=False)
 
                 print(f"iteration {iteration} metrics = {self.metrics}")
                 df = pd.DataFrame.from_dict(self.metrics, orient="index").transpose()
@@ -874,4 +871,4 @@ class Pipeline:
                 ]
                 for i in col_names:
                     df[i] = df[i].astype(float).round(2)
-                df.to_csv(parameters["test"]["metric_csv_path"], index=False)
+                df.to_csv(self.parameters["test"]["metric_csv_path"], index=False)
