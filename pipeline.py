@@ -109,6 +109,7 @@ class Pipeline:
             "actual_pos_imgs_0.5": [],
         }
         self.prediction_prob = {}
+        logging.info("load config")
         self.parameters= self.load_config(self.config_path)
 
     # similiarity search class
@@ -434,9 +435,6 @@ class Pipeline:
 
         # +++++++++++++++++++++++++++++++++++++++++++++++++++++
         # seed dataset
-
-        logging.info("load config") #todo
-        self.parameters = self.load_config(self.config_path)
 
         # directories
         for i in [self.parameters["nn"]["unlabled_path"], self.parameters["nn"]["labeled_path"], self.parameters["nn"]["positive_path"],
