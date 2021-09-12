@@ -26,7 +26,7 @@ nn:
   negative_path:    /content/runtime/swipe/labeled/negative
   unsure_path:      /content/runtime/swipe/unsure
   swipelabel_batch_size: 5
-  swipe_dir: /content/AL_final
+  
 
 annoy:
     num_trees:      50
