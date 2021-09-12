@@ -265,7 +265,7 @@ class Pipeline:
         #swipe labeler
         else:
             batch_size = min(len(list(paths.list_images(unlabled_path))),self.parameters['nn']['swipelabel_batch_size'])
-            swipe_dir = os.path.join(self.parameters['nn']['swipe_dir'],'Swipe-Labeler-main/api/api.py')
+            swipe_dir = os.path.join("Active-Labeller/",'Swipe-Labeler-main/api/api.py') #TODO change name
             label = f"python3 {swipe_dir} --path_for_unlabeled='{unlabled_path}' --path_for_pos_labels='{positive_path}' --path_for_neg_labels='{negative_path}' --path_for_unsure_labels='{unsure_path}' --batch_size={batch_size} > swipelog.txt"
             logging.debug(label)
             ossys = os.system(label)
@@ -440,6 +440,25 @@ class Pipeline:
         parameters = self.load_config(self.config_path)
         #todo
         self.parameters = self.load_config(self.config_path)
+
+        # directories
+        for i in [self.parameters["nn"]["unlabled_path"], self.parameters["nn"]["labeled_path"], self.parameters["nn"]["positive_path"],
+                  self.parameters["nn"]["negative_path"], self.parameters["nn"]["unsure_path"], self.parameters["AL_main"]["al_folder"],
+                  os.path.join(self.parameters["AL_main"]["al_folder"], "positive"),
+                  os.path.join(self.parameters["AL_main"]["al_folder"], "negative"),
+                  os.path.join(self.parameters["AL_main"]["newly_labled_path"], "positive"),
+                  os.path.join(self.parameters["AL_main"]["newly_labled_path"], "negative"),
+                  '/'.join(self.parameters["annoy"]["annoy_path"].split('/')[:-1])]:
+            if os.path.exists(i):
+                shutil.rmtree(i)
+        for i in [self.parameters["nn"]["unlabled_path"], self.parameters["nn"]["labeled_path"], self.parameters["nn"]["positive_path"],
+                  self.parameters["nn"]["negative_path"], self.parameters["nn"]["unsure_path"], self.parameters["AL_main"]["al_folder"],
+                  os.path.join(self.parameters["AL_main"]["al_folder"], "positive"),
+                  os.path.join(self.parameters["AL_main"]["al_folder"], "negative"),
+                  os.path.join(self.parameters["AL_main"]["newly_labled_path"], "positive"),
+                  os.path.join(self.parameters["AL_main"]["newly_labled_path"], "negative"),
+                  '/'.join(self.parameters["annoy"]["annoy_path"].split('/')[:-1])]:
+            pathlib.Path(i).mkdir(parents=True, exist_ok=True)
 
         logging.info("load model")
         model = self.load_model(
@@ -769,6 +788,9 @@ class Pipeline:
                     for image_name in self.unlabeled_list
                 ],
             )
+
+            #save model
+            train_models.save_model()
 
             # --TEST
             if parameters['test']['metrics']:
