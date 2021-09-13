@@ -124,7 +124,10 @@ class Pipeline:
     def inference(self, image_path, model, model_type):
         im = Image.open(image_path).convert("RGB")
         image = np.transpose(im, (2, 0, 1)).copy()
-        im = torch.tensor(image).unsqueeze(0).float().cuda()
+        if self.parameters["device"] == "cuda":
+            im = torch.tensor(image).unsqueeze(0).float().cuda()
+        elif self.parameters["device"] == "cpu":
+            im = torch.tensor(image).unsqueeze(0).float().cpu()
         x = model(im) if model_type == "model" else model.encoder(im)[-1]
         return x[0]
 
@@ -152,14 +155,20 @@ class Pipeline:
     ):
         dataset_paths = [(self.parameters["data"]["data_path"] + "/Unlabeled/" + image_name) for image_name in dataset_imgs]
         t = transforms.Resize((image_size, image_size))
-        embedding_matrix = torch.empty(size=(0, embedding_size)).cuda()
+        if self.parameters["device"] == "cuda":
+            embedding_matrix = torch.empty(size=(0, embedding_size)).cuda()
+        elif self.parameters["device"] == "cpu":
+            embedding_matrix = torch.empty(size=(0, embedding_size)).cpu()
         model = model
         for f in tqdm(dataset_paths):
             with torch.no_grad():
                 im = Image.open(f).convert("RGB")
                 im = t(im)
                 im = np.asarray(im).transpose(2, 0, 1)
-                im = torch.Tensor(im).unsqueeze(0).cuda()
+                if self.parameters["device"] == "cuda":
+                    im = torch.Tensor(im).unsqueeze(0).cuda()
+                elif self.parameters["device"] == "cpu":
+                    im = torch.Tensor(im).unsqueeze(0).cpu()
                 if model_type == "model":
                     embedding = model(im)[0]
                 else:  # encoder
@@ -343,7 +352,6 @@ class Pipeline:
         return config
 
     def load_model(self, model_type, model_path, data_path):  # , device):
-        # todo device
         if model_type == "simclr":
             model = SIMCLR.SIMCLR.load_from_checkpoint(model_path, DATA_PATH=data_path)
             logging.info("simclr model loaded")
@@ -354,7 +362,7 @@ class Pipeline:
             )
             logging.info("simsiam model loaded")
 
-        model.to("cuda")
+        model.to(self.parameters["device"])
         model.eval()
         return model
 
@@ -443,6 +451,8 @@ class Pipeline:
                   os.path.join(self.parameters["AL_main"]["al_folder"], "negative"),
                   os.path.join(self.parameters["AL_main"]["newly_labled_path"], "positive"),
                   os.path.join(self.parameters["AL_main"]["newly_labled_path"], "negative"),
+                  os.path.join(self.parameters["AL_main"]["archive_path"], "positive"),
+                  os.path.join(self.parameters["AL_main"]["archive_path"], "negative"),
                   '/'.join(self.parameters["annoy"]["annoy_path"].split('/')[:-1])]:
             if os.path.exists(i):
                 shutil.rmtree(i)
@@ -452,6 +462,8 @@ class Pipeline:
                   os.path.join(self.parameters["AL_main"]["al_folder"], "negative"),
                   os.path.join(self.parameters["AL_main"]["newly_labled_path"], "positive"),
                   os.path.join(self.parameters["AL_main"]["newly_labled_path"], "negative"),
+                  os.path.join(self.parameters["AL_main"]["archive_path"], "positive"),
+                  os.path.join(self.parameters["AL_main"]["archive_path"], "negative"),
                   '/'.join(self.parameters["annoy"]["annoy_path"].split('/')[:-1])]:
             pathlib.Path(i).mkdir(parents=True, exist_ok=True)
 
@@ -477,8 +489,6 @@ class Pipeline:
             self.parameters["annoy"]["annoy_path"],
         )
 
-
-        #todo continuation
         if self.parameters["seed_dataset"]["nn"] == 1:
             logging.info("create_seed_dataset")
             self.labled_list = []
@@ -496,12 +506,11 @@ class Pipeline:
             ]
             for i in self.labled_list:
                 self.unlabeled_list.remove(i)
-            newly_labled_path = self.parameters["seed_dataset"]["seed_data_path"] #todo: put seed inside labeled path ?
+            newly_labled_path = self.parameters["seed_dataset"]["seed_data_path"]
 
         # +++++++++++++++++++++++++++++++++++++++++++++++++++++
         # AL - linear and finetuning
 
-        os.chdir(self.parameters["AL_main"]["al_folder"])
         logging.info("active_labeling")
         logging.info(
             "Initializing active labeler and train models class objects."
@@ -521,10 +530,10 @@ class Pipeline:
 
         train_models = TrainModels(
             self.parameters["TrainModels"]["config_path"],
-            "./", #todo check if this is right or put in config file
+            "./final_model.ckpt", #todo add more details to name or ask user for path
             self.parameters["data"]["data_path"],
             "AL",
-        )  # todo saved model path # datapath => sub directory structure for datapath arg
+        )
 
         def to_tensor(pil):
             return torch.tensor(np.array(pil)).permute(2, 0, 1).float()
@@ -553,11 +562,6 @@ class Pipeline:
             )
 
             input_counter = input()
-
-            #todo automatic iteration
-            # input_counter = "f"
-            # if iteration == 21:
-            #     input_counter = "q"
 
             if input_counter == "q":
                 break
@@ -679,9 +683,8 @@ class Pipeline:
                 if self.parameters['test']['metrics']:
                     self.metrics["train_time"].append((toc - tic) // 60)
 
-                # todo ? change generate emb again => using encoder from model from train_all
                 logging.info("regenerate embeddings")
-                encoder = train_models.get_model().to("cuda")  # todo device
+                encoder = train_models.get_model().to(self.parameters["device"])
                 self.initialize_embeddings(
                     self.parameters["model"]["image_size"],
                     self.parameters["model"]["embedding_size"],
@@ -717,7 +720,7 @@ class Pipeline:
                 self.parameters["ActiveLabeler"]["sampling_strategy"],
                 self.parameters["ActiveLabeler"]["sample_size"],
                 None,
-                "cuda"
+                self.parameters["device"]
             )
 
             #nn and label
