@@ -9,11 +9,11 @@ The Active Labeller is a CLI Tool that facilitates labeling datasets with just a
 Bringing about a model’s full potential with limited data is the core concept behind Active Learning. This follows several strategies and other techniques that identify points based on a model’s difficulty in understanding them. 
 Some of the strategies present in this tool includes:
 -  Random
-    * Random fucntion is used to pick examples uniformly from the entire unlabeled dataset.
+    * Random function is used to pick examples uniformly from the entire unlabeled dataset.
 -  Uncertainty
     * Examples that lie near the decision boundary of classifer model are picked.
 -  Gaussian 
-    * Gaussian function is used to pick examples based on their predicitons and a gaussian curve. 
+    * Gaussian function is used to pick examples based on their predictions and a gaussian curve. 
 
 
 ## Swipe Labeller:
