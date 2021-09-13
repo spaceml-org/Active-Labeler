@@ -1,6 +1,6 @@
 # Active Labeler
 
-<img src="https://github.com/spaceml-org/Active-Labeller/blob/main/readme_banner.jpeg" >
+<img src="https://github.com/spaceml-org/Active-Labeller/blob/main/readme_banner.png" >
 
 "When the neural network in your head has been trained to label images, but not to code"
 The Active Labeller is a CLI Tool that facilitates labeling datasets with just a SINGLE line of code. The tool comes fully equipped with various Active Learning strategies and other customizable features to suit one’s requirements.
