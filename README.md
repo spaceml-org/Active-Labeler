@@ -36,7 +36,7 @@ Your data must be in the following format, inside a subdirectory, to be used by 
 
 ## How to use
 
-* For Colab-friendly version and general examples check [colab]()
+* For Colab-friendly version and general examples check [colab](https://colab.research.google.com/drive/16SP5rPTuIaZeNqKMPSxw3NcuizGSgnn8?usp=sharing)
 * For a CLI-Version, simply do 
    
   - Clone the code
