@@ -6,7 +6,7 @@ model:
 
 verbose: 1
 seed: 100
-
+device: cuda #cpu
 
 data:
   data_path:        /content/Dataset
@@ -26,7 +26,6 @@ nn:
   negative_path:    /content/runtime/swipe/labeled/negative
   unsure_path:      /content/runtime/swipe/unsure
   swipelabel_batch_size: 5
-  
 
 annoy:
     num_trees:      50
@@ -41,7 +40,7 @@ ActiveLabeler:
   batch_size: 128
 
 AL_main:
-  newly_labled_path:  /content/new_label
+  newly_labled_path:  /content/runtime/swipe/new_label
   archive_path:       /content/runtime/swipe/archive
   nn:                 0
   n_closest:          5
@@ -49,7 +48,7 @@ AL_main:
   train_dataset_batch_size : 32
 
 seed_dataset:
- nn: 1 #put ref img here
+ nn: 1 #todo put ref img here
  seed_data_path: /content/seed_dataset
 
 
