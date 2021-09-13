@@ -37,7 +37,7 @@ def main():
             level=logging.DEBUG,
             format="%(asctime)s - %(levelname)-8s - %(funcName)-15s - %(message)s', datefmt='%d-%b-%y %H:%M:%S",
             handlers=[
-                logging.FileHandler("/content/app.log", mode='a')
+                logging.FileHandler("/content/app.log", mode='a') #TODO logging - give user choice or hardcode ?
             ]
         )
     else:
@@ -55,6 +55,8 @@ def main():
                os.path.join(config["AL_main"]["al_folder"],"positive"),os.path.join(config["AL_main"]["al_folder"],"negative"),
                os.path.join(config["AL_main"]["newly_labled_path"], "positive"),
                os.path.join(config["AL_main"]["newly_labled_path"], "negative"),
+               os.path.join(self.parameters["AL_main"]["archive_path"], "positive"),
+               os.path.join(self.parameters["AL_main"]["archive_path"], "negative"),
                '/'.join(config["annoy"]["annoy_path"].split('/')[:-1]) ]:
       if os.path.exists(i):
         shutil.rmtree(i)
@@ -62,6 +64,8 @@ def main():
                os.path.join(config["AL_main"]["al_folder"],"positive"),os.path.join(config["AL_main"]["al_folder"],"negative"),
                os.path.join(config["AL_main"]["newly_labled_path"], "positive"),
                os.path.join(config["AL_main"]["newly_labled_path"], "negative"),
+               os.path.join(self.parameters["AL_main"]["archive_path"], "positive"),
+               os.path.join(self.parameters["AL_main"]["archive_path"], "negative"),
                '/'.join(config["annoy"]["annoy_path"].split('/')[:-1]) ]:
       pathlib.Path(i).mkdir(parents=True, exist_ok=True)
 
