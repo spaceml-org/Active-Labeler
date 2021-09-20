@@ -1,14 +1,14 @@
 encoder:
   encoder_type: SIMCLR
-  encoder_path:  /content/RESISC45-imagenet_resnet18.ckpt
-  e_embedding_size: 512
+  encoder_path:  /content/models/SIMCLR_ssl.ckpt
+  e_embedding_size: 32
   e_lr: 1e-2
   train_encoder: False
 
 classifier:
   classifier_type: SSLEvaluator
   c_num_classes: 2
-  c_hidden_dim: 128
+  c_hidden_dim: 64
   c_linear_lr: 1e-1
   c_dropout: 0.1
   c_gamma: 0.1
@@ -24,4 +24,4 @@ miscellaneous:
   device: cuda
 
 training:
-  epochs: 5
+  epochs: 50

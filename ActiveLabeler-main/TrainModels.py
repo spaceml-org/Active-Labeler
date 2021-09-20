@@ -7,6 +7,7 @@ import torch
 
 from models import SIMCLR, SIMSIAM
 from Linear_models import SSLEvaluator
+from Linear_models_one_layer import SSLEvaluatorOneLayer
 from ClassifierModel import ClassifierModel
 
 class TrainModels:
@@ -50,6 +51,13 @@ class TrainModels:
         # Initialise the linear classifier
         if self.parameters["classifier"]["classifier_type"] == "SSLEvaluator":
             self.linear_model = SSLEvaluator(
+                n_input=self.parameters["encoder"]["e_embedding_size"],
+                n_classes=self.parameters["classifier"]["c_num_classes"],
+                p=self.parameters["classifier"]["c_dropout"],
+                n_hidden=self.parameters["classifier"]["c_hidden_dim"],
+            )
+        elif self.parameters["classifier"]["classifier_type"] == "SSLEvaluatorOneLayer":
+            self.linear_model = SSLEvaluatorOneLayer(
                 n_input=self.parameters["encoder"]["e_embedding_size"],
                 n_classes=self.parameters["classifier"]["c_num_classes"],
                 p=self.parameters["classifier"]["c_dropout"],
