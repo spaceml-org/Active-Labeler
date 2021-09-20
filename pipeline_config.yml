@@ -18,7 +18,7 @@ test: #TODO
   test_path:       /content/TestData
 
 nn:
-  ref_img_path:     /content/UCMerced_LandUse/Images/airplane/airplane_01.jpg
+  ref_img_path:     /content/UCMerced_LandUse/Images/airplane/airplane01.jpg
   simulate_label:   False #TODO
   unlabled_path:    /content/runtime/swipe/unlabeled
   labeled_path:     /content/runtime/swipe/labeled #todo needed ?
