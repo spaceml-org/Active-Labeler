@@ -1,8 +1,8 @@
 model:
   model_type:       simclr
-  model_path:       /content/RESISC45-imagenet_resnet18.ckpt
+  model_path:       /content/models/SIMCLR_ssl.ckpt
   image_size:       256
-  embedding_size:   512
+  embedding_size:   32
 
 verbose: 1
 seed: 100
@@ -18,7 +18,7 @@ test: #TODO
   test_path:       /content/TestData
 
 nn:
-  ref_img_path:     /content/RESISC45/airplane/airplane_001.jpg
+  ref_img_path:     /content/UCMerced_LandUse/Images/airplane/airplane_01.jpg
   simulate_label:   False #TODO
   unlabled_path:    /content/runtime/swipe/unlabeled
   labeled_path:     /content/runtime/swipe/labeled #todo needed ?
@@ -32,7 +32,7 @@ annoy:
     annoy_path:     /content/runtime/NN_local/annoy_file.ann
 
 TrainModels:
-  config_path:     /content/AL_final/model_config.yaml
+  config_path:     /content/Active-Labeler/model_config.yaml
 
 ActiveLabeler:
   sample_size:      20
