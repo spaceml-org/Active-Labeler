@@ -32,7 +32,7 @@ annoy:
     annoy_path:     /content/runtime/NN_local/annoy_file.ann
 
 TrainModels:
-  config_path:     /content/Active-Labeler/model_config.yaml
+  config_path:     /content/Active-Labeller/model_config.yaml
 
 ActiveLabeler:
   sample_size:      20
