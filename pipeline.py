@@ -274,7 +274,7 @@ class Pipeline:
         #swipe labeler
         else:
             batch_size = min(len(list(paths.list_images(unlabled_path))),self.parameters['nn']['swipelabel_batch_size'])
-            swipe_dir = os.path.join("Active-Labeller/",'Swipe-Labeler-main/api/api.py') #TODO change name
+            swipe_dir = os.path.join("Active-Labeler/",'Swipe-Labeler-main/api/api.py')
             label = f"python3 {swipe_dir} --path_for_unlabeled='{unlabled_path}' --path_for_pos_labels='{positive_path}' --path_for_neg_labels='{negative_path}' --path_for_unsure_labels='{unsure_path}' --batch_size={batch_size} > swipelog.txt"
             logging.debug(label)
             ossys = os.system(label)
@@ -531,7 +531,7 @@ class Pipeline:
 
         train_models = TrainModels(
             self.parameters["TrainModels"]["config_path"],
-            "./final_model.ckpt", #todo add more details to name or ask user for path
+            "./final_model.ckpt",
             self.parameters["data"]["data_path"],
             "AL",
         )
