@@ -314,7 +314,7 @@ class Pipeline:
             iteration += 1
             print(f"\n----- iteration: {iteration}")
 
-            print("Enter n closest")
+            print("Enter n closest, 0 to stop")
             n_closest = int(input())
             if n_closest == 0:
                 break
