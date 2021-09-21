@@ -180,7 +180,7 @@ __Model Config__: Arguments related to model training present in [```model_confi
 
 
 ### Where can I find the trained model?
-If needed, the finetuned model can be accessed from ```./models/final_model.ckpt```
+If needed, the finetuned model can be accessed from ```./final_model.ckpt```
 
 ## Citation
 If you find the Active Labeler useful in your research, please consider citing the github code for this tool:
