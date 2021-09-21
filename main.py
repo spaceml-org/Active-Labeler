@@ -73,6 +73,9 @@ def main():
     pipeline = Pipeline(config_path=config_path, class_name=class_name)
     pipeline.main()
 
+    #todo save model - add in pipeline main()
+    #notebook separate for active labeler - resic
+
 if __name__ == '__main__':
     main()
 
