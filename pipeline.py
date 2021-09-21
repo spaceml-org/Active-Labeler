@@ -399,10 +399,11 @@ class Pipeline:
             emb_dataset.append(self.embeddings[self.dataset_paths.index(img.split("/")[-1])])
         return emb_dataset
 
-    def test_data(self, model, test_path, t, device="cuda"):
+    def test_data(self, model, loader, device="cuda"):
+        #def test_data(self, model, test_path, t, device="cuda"):
 
-        test_dataset = torchvision.datasets.ImageFolder(test_path, t)
-        loader = DataLoader(test_dataset, batch_size=1)
+        # test_dataset = torchvision.datasets.ImageFolder(test_path, t)
+        # loader = DataLoader(test_dataset, batch_size=1)
 
         # model.to(device)
         model.eval()
@@ -587,7 +588,7 @@ class Pipeline:
                         self.parameters["AL_main"]["archive_path"] + "/negative",
                     )
 
-                #newly labled + archive emb mapping
+                #newly labled + archive emb mapping  # emb_dataset = [[emb,label]..] 0-neg, 1 -pos
                 for i in emb_dataset_archive:
                     emb_dataset.append(i)
 
@@ -798,7 +799,8 @@ class Pipeline:
                 self.metrics["class"].append(self.class_name)
                 self.metrics["model_type"].append(input_counter)
 
-                self.test_data(train_models.get_model(), self.parameters["test"]["test_path"], t)
+                #self.test_data(train_models.get_model(), self.parameters["test"]["test_path"], t)
+                self.test_data(train_models.get_model(),validation_dataset, self.parameters["device"])
 
                 #prob metrics
 
