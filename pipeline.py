@@ -75,7 +75,7 @@ from TrainModels import TrainModels
 
 
 class Pipeline:
-    def __init__(self, config_path, class_name):
+    def __init__(self, config_path):
         self.config_path = config_path
         self.dataset_paths = [] #contains image names corresponding to emb
         self.unlabeled_list = []
@@ -83,7 +83,6 @@ class Pipeline:
         self.embeddings = None
         self.div_embeddings = None
         self.initialize_emb_counter = 0
-        self.class_name = class_name
         self.metrics = {
             "class": [],
             "step": [],
@@ -261,12 +260,12 @@ class Pipeline:
         ori_neg = len(list(paths.list_images(negative_path)))
 
         #simulate labeling
-        if self.parameters["nn"]["simulate_label"]:
+        if self.parameters["test"]["simulate_label"]:
             for img in list(paths.list_images(unlabled_path)):
                 src = unlabled_path + "/" + img.split("/")[-1]
                 dest = (
                     (positive_path + "/" + img.split("/")[-1])
-                    if self.class_name in img
+                    if self.parameters["test"]["pos_class"] in img
                     else (negative_path + "/" + img.split("/")[-1])
                 )
                 shutil.move(src, dest)
@@ -796,7 +795,7 @@ class Pipeline:
 
                 # step, class, model_type append in main
                 self.metrics["step"].append(iteration)
-                self.metrics["class"].append(self.class_name)
+                self.metrics["class"].append(self.parameters["test"]["pos_class"])
                 self.metrics["model_type"].append(input_counter)
 
                 #self.test_data(train_models.get_model(), self.parameters["test"]["test_path"], t)
@@ -808,7 +807,7 @@ class Pipeline:
                 prob_pos, prob_neg = [], []
                 i = 0
                 for p in predic_prob:
-                    if self.class_name in predic_prob_imgs[i]:
+                    if self.parameters["test"]["pos_class"] in predic_prob_imgs[i]:
                         prob_pos.append(p)
                     else:
                         prob_neg.append(p)
