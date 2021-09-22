@@ -16,7 +16,7 @@ classifier:
   c_weight_decay: 1e-6
   c_final_lr: 1e-6
   c_momentum: 0.9
-  c_scheduler_type: cosine # Help: cosine or step
+  c_scheduler_type: cosine
 
 miscellaneous:
   seed: 100
