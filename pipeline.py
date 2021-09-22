@@ -56,7 +56,19 @@ import matplotlib.image as mpimg
 from imutils import paths
 import sys
 
+
 import logging
+#initial log settings
+log_file = "active_labeler.log"
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s - %(levelname)-8s - %(funcName)-15s - %(message)s',
+    datefmt='%d-%b-%y %H:%M:%S',
+    handlers=[
+        logging.FileHandler(log_file, mode='a'),
+        logging.StreamHandler()
+    ]
+)
 logging.info("APP START")
 
 # sys.path.insert(0, "Self-Supervised-Learner")
@@ -110,6 +122,24 @@ class Pipeline:
         self.prediction_prob = {}
         logging.info("load config")
         self.parameters= self.load_config(self.config_path)
+
+        self.parameters["swipe_labeler"]["labeled_path"] = os.path.join(self.parameters["runtime_path"],"swipe/labeled")
+        self.parameters["swipe_labeler"]["positive_path"]= os.path.join(self.parameters["swipe_labeler"]["labeled_path"], "positive")
+        self.parameters["swipe_labeler"]["negative_path"] = os.path.join(self.parameters["swipe_labeler"]["labeled_path"], "negative")
+        self.parameters["swipe_labeler"]["unlabeled_path"] = os.path.join(self.parameters["runtime_path"],
+                                                                         "swipe/unlabeled")
+
+        self.parameters["swipe_labeler"]["unsure_path"] = os.path.join(self.parameters["runtime_path"],
+                                                                         "swipe/unsure")
+
+        self.parameters["annoy"]["annoy_path"] = os.path.join(self.parameters["runtime_path"],
+                                                                               "NN_local/annoy_file.ann")
+
+        self.parameters["ActiveLabeler"]["newly_labled_path"] = os.path.join(self.parameters["runtime_path"],
+                                                              "swipe/new_label")
+        self.parameters["ActiveLabeler"]["archive_path"] = os.path.join(self.parameters["runtime_path"],
+                                                                       "swipe/archive")
+
 
     # similiarity search class
     def get_annoy_tree(self, num_nodes, embeddings, num_trees, annoy_path):
@@ -231,7 +261,7 @@ class Pipeline:
             image_path_copy = (
                 self.parameters["data"]["data_path"] + "/Unlabeled/" + image_name
             )
-            shutil.copy(image_path_copy, self.parameters["nn"]["unlabled_path"])
+            shutil.copy(image_path_copy, self.parameters["swipe_labeler"]["unlabeled_path"])
 
             #remove from unlabeled list and add to labeled list
             self.unlabeled_list.remove(
@@ -244,15 +274,15 @@ class Pipeline:
 
     def swipe_label(self):
 
-        unlabled_path = self.parameters["nn"]["unlabled_path"]
-        labeled_path =  self.parameters["nn"]["labeled_path"]
-        positive_path = self.parameters["nn"]["positive_path"]
-        negative_path = self.parameters["nn"]["negative_path"]
-        unsure_path = self.parameters["nn"]["unsure_path"]
+        unlabeled_path = self.parameters["swipe_labeler"]["unlabeled_path"]
+        labeled_path =  self.parameters["swipe_labeler"]["labeled_path"]
+        positive_path = self.parameters["swipe_labeler"]["positive_path"]
+        negative_path = self.parameters["swipe_labeler"]["negative_path"]
+        unsure_path = self.parameters["swipe_labeler"]["unsure_path"]
 
         logging.info("Calling swipe labeler")
         print(
-            f"\n {len(list(paths.list_images(unlabled_path)))} images to label."
+            f"\n {len(list(paths.list_images(unlabeled_path)))} images to label."
         )
 
         ori_labled = len(list(paths.list_images(labeled_path)))
@@ -261,8 +291,8 @@ class Pipeline:
 
         #simulate labeling
         if self.parameters["test"]["simulate_label"]:
-            for img in list(paths.list_images(unlabled_path)):
-                src = unlabled_path + "/" + img.split("/")[-1]
+            for img in list(paths.list_images(unlabeled_path)):
+                src = unlabeled_path + "/" + img.split("/")[-1]
                 dest = (
                     (positive_path + "/" + img.split("/")[-1])
                     if self.parameters["test"]["pos_class"] in img
@@ -272,16 +302,16 @@ class Pipeline:
 
         #swipe labeler
         else:
-            batch_size = min(len(list(paths.list_images(unlabled_path))),self.parameters['nn']['swipelabel_batch_size'])
+            batch_size = min(len(list(paths.list_images(unlabeled_path))),self.parameters['swipe_label_batch_size'])
             swipe_dir = os.path.join("Active-Labeler/",'Swipe-Labeler-main/api/api.py')
-            label = f"python3 {swipe_dir} --path_for_unlabeled='{unlabled_path}' --path_for_pos_labels='{positive_path}' --path_for_neg_labels='{negative_path}' --path_for_unsure_labels='{unsure_path}' --batch_size={batch_size} > swipelog.txt"
+            swipe_log = "> swipelog.txt"
+            label = f"python3 {swipe_dir} --path_for_unlabeled='{unlabeled_path}' --path_for_pos_labels='{positive_path}' --path_for_neg_labels='{negative_path}' --path_for_unsure_labels='{unsure_path}' --batch_size={batch_size} {swipe_log}"
             logging.debug(label)
             ossys = os.system(label)
             logging.debug(f"swipe labeler exit code {ossys}")
 
 
-            # label = f"nohup python3 {swipe_dir} --path_for_unlabeled='{unlabled_path}' --path_for_pos_labels='{positive_path}' --path_for_neg_labels='{negative_path}' --path_for_unsure_labels='{unsure_path}' --batch_size={batch_size} > swipelog.txt &"
-            # #todo swipelog merge to main log
+            # label = f"nohup python3 {swipe_dir} --path_for_unlabeled='{unlabeled_path}' --path_for_pos_labels='{positive_path}' --path_for_neg_labels='{negative_path}' --path_for_unsure_labels='{unsure_path}' --batch_size={batch_size} > swipelog.txt &"
             # # >/dev/null 2>&1"
             # logging.debug(label)
             # ossys = os.system(label)
@@ -319,7 +349,7 @@ class Pipeline:
                 break
 
             ref_imgs = (
-                [self.parameters["nn"]["ref_img_path"]] if iteration == 1 else list(paths.list_images(self.parameters["nn"]["positive_path"]))
+                [self.parameters["seed_dataset"]["ref_img_path"]] if iteration == 1 else list(paths.list_images(self.parameters["swipe_labeler"]["positive_path"]))
             )
             embs = [None] if iteration == 1 else self.find_emb(ref_imgs)
             imgs = self.search_similar(
@@ -443,25 +473,21 @@ class Pipeline:
         # seed dataset
 
         # directories
-        for i in [self.parameters["nn"]["unlabled_path"], self.parameters["nn"]["labeled_path"], self.parameters["nn"]["positive_path"],
-                  self.parameters["nn"]["negative_path"], self.parameters["nn"]["unsure_path"], self.parameters["AL_main"]["al_folder"],
-                  os.path.join(self.parameters["AL_main"]["al_folder"], "positive"),
-                  os.path.join(self.parameters["AL_main"]["al_folder"], "negative"),
-                  os.path.join(self.parameters["AL_main"]["newly_labled_path"], "positive"),
-                  os.path.join(self.parameters["AL_main"]["newly_labled_path"], "negative"),
-                  os.path.join(self.parameters["AL_main"]["archive_path"], "positive"),
-                  os.path.join(self.parameters["AL_main"]["archive_path"], "negative"),
+        for i in [self.parameters["swipe_labeler"]["unlabeled_path"], self.parameters["swipe_labeler"]["labeled_path"], self.parameters["swipe_labeler"]["positive_path"],
+                  self.parameters["swipe_labeler"]["negative_path"], self.parameters["swipe_labeler"]["unsure_path"],
+                  os.path.join(self.parameters["ActiveLabeler"]["newly_labled_path"], "positive"),
+                  os.path.join(self.parameters["ActiveLabeler"]["newly_labled_path"], "negative"),
+                  os.path.join(self.parameters["ActiveLabeler"]["archive_path"], "positive"),
+                  os.path.join(self.parameters["ActiveLabeler"]["archive_path"], "negative"),
                   '/'.join(self.parameters["annoy"]["annoy_path"].split('/')[:-1])]:
             if os.path.exists(i):
                 shutil.rmtree(i)
-        for i in [self.parameters["nn"]["unlabled_path"], self.parameters["nn"]["labeled_path"], self.parameters["nn"]["positive_path"],
-                  self.parameters["nn"]["negative_path"], self.parameters["nn"]["unsure_path"], self.parameters["AL_main"]["al_folder"],
-                  os.path.join(self.parameters["AL_main"]["al_folder"], "positive"),
-                  os.path.join(self.parameters["AL_main"]["al_folder"], "negative"),
-                  os.path.join(self.parameters["AL_main"]["newly_labled_path"], "positive"),
-                  os.path.join(self.parameters["AL_main"]["newly_labled_path"], "negative"),
-                  os.path.join(self.parameters["AL_main"]["archive_path"], "positive"),
-                  os.path.join(self.parameters["AL_main"]["archive_path"], "negative"),
+        for i in [self.parameters["swipe_labeler"]["unlabeled_path"], self.parameters["swipe_labeler"]["labeled_path"], self.parameters["swipe_labeler"]["positive_path"],
+                  self.parameters["swipe_labeler"]["negative_path"], self.parameters["swipe_labeler"]["unsure_path"],
+                  os.path.join(self.parameters["ActiveLabeler"]["newly_labled_path"], "positive"),
+                  os.path.join(self.parameters["ActiveLabeler"]["newly_labled_path"], "negative"),
+                  os.path.join(self.parameters["ActiveLabeler"]["archive_path"], "positive"),
+                  os.path.join(self.parameters["ActiveLabeler"]["archive_path"], "negative"),
                   '/'.join(self.parameters["annoy"]["annoy_path"].split('/')[:-1])]:
             pathlib.Path(i).mkdir(parents=True, exist_ok=True)
 
@@ -487,13 +513,13 @@ class Pipeline:
             self.parameters["annoy"]["annoy_path"],
         )
 
-        if self.parameters["seed_dataset"]["nn"] == 1:
+        if self.parameters["seed_dataset"]["seed_nn"] == 1:
             logging.info("create_seed_dataset")
             self.labled_list = []
             self.create_seed_dataset(
                 model,
             )
-            newly_labled_path = self.parameters["nn"]["labeled_path"]
+            newly_labled_path = self.parameters["swipe_labeler"]["labeled_path"]
 
         else:
             self.labled_list = [
@@ -522,12 +548,12 @@ class Pipeline:
                 for image_name in self.unlabeled_list
             ],
             self.parameters['model']['image_size'],
-            self.parameters['ActiveLabeler']['batch_size'],
+            self.parameters['ActiveLabeler']['active_label_batch_size'],
             self.parameters['seed']
         )
 
         train_models = TrainModels(
-            self.parameters["TrainModels"]["config_path"],
+            self.parameters["model"]["model_config_path"],
             "./final_model.ckpt",
             self.parameters["data"]["data_path"],
             "AL",
@@ -575,14 +601,14 @@ class Pipeline:
                 #create archive labeled images emb mapping
                 if iteration == 1:
                     emb_dataset_archive = self.create_emb_label_mapping(
-                        self.parameters["nn"]["labeled_path"] + "/positive",
-                        self.parameters["nn"]["labeled_path"] + "/negative",
+                        self.parameters["swipe_labeler"]["labeled_path"] + "/positive",
+                        self.parameters["swipe_labeler"]["labeled_path"] + "/negative",
                     )
 
                 else:
                     emb_dataset_archive = self.create_emb_label_mapping(
-                        self.parameters["AL_main"]["archive_path"] + "/positive",
-                        self.parameters["AL_main"]["archive_path"] + "/negative",
+                        self.parameters["ActiveLabeler"]["archive_path"] + "/positive",
+                        self.parameters["ActiveLabeler"]["archive_path"] + "/negative",
                     )
 
                 #newly labled + archive emb mapping  # emb_dataset = [[emb,label]..] 0-neg, 1 -pos
@@ -596,7 +622,7 @@ class Pipeline:
                     ) + len(
                         list(
                             paths.list_images(
-                                self.parameters["AL_main"]["archive_path"] + "/positive"
+                                self.parameters["ActiveLabeler"]["archive_path"] + "/positive"
                             )
                         )
                     )
@@ -605,7 +631,7 @@ class Pipeline:
                     ) + len(
                         list(
                             paths.list_images(
-                                self.parameters["AL_main"]["archive_path"] + "/negative"
+                                self.parameters["ActiveLabeler"]["archive_path"] + "/negative"
                             )
                         )
                     )
@@ -618,7 +644,7 @@ class Pipeline:
                 emb_dataset = random.Random(self.parameters["seed"]).sample(emb_dataset, len(emb_dataset))
                 n_80 = (len(emb_dataset) * 8) // 10
                 training_dataset = DataLoader(
-                    emb_dataset[:n_80], batch_size=self.parameters['AL_main']['train_dataset_batch_size']
+                    emb_dataset[:n_80], batch_size=self.parameters['ActiveLabeler']['train_dataset_batch_size']
                 )
                 validation_dataset = DataLoader(emb_dataset[n_80 + 1 :], batch_size=1)
 
@@ -631,10 +657,10 @@ class Pipeline:
 
             # put seed dataset/newly labeled data in archive path and clear newly labeled
             for img in list(paths.list_images(newly_labled_path + "/positive")):
-                shutil.copy(img, self.parameters["AL_main"]["archive_path"] + "/positive")
+                shutil.copy(img, self.parameters["ActiveLabeler"]["archive_path"] + "/positive")
             for img in list(paths.list_images(newly_labled_path + "/negative")):
-                shutil.copy(img, self.parameters["AL_main"]["archive_path"] + "/negative")
-            newly_labled_path = self.parameters["AL_main"]["newly_labled_path"]
+                shutil.copy(img, self.parameters["ActiveLabeler"]["archive_path"] + "/negative")
+            newly_labled_path = self.parameters["ActiveLabeler"]["newly_labled_path"]
             for img in list(paths.list_images(newly_labled_path)):
                 os.remove(img)
 
@@ -647,14 +673,14 @@ class Pipeline:
                     tmp_p = len(
                         list(
                             paths.list_images(
-                                self.parameters["AL_main"]["archive_path"] + "/positive"
+                                self.parameters["ActiveLabeler"]["archive_path"] + "/positive"
                             )
                         )
                     ) + len(list(paths.list_images(newly_labled_path + "/positive")))
                     tmp_n = len(
                         list(
                             paths.list_images(
-                                self.parameters["AL_main"]["archive_path"] + "/negative"
+                                self.parameters["ActiveLabeler"]["archive_path"] + "/negative"
                             )
                         )
                     ) + len(list(paths.list_images(newly_labled_path + "/negative")))
@@ -665,14 +691,14 @@ class Pipeline:
 
                 #training and validation datasets
                 archive_dataset = torchvision.datasets.ImageFolder(
-                    self.parameters["AL_main"]["archive_path"], t
+                    self.parameters["ActiveLabeler"]["archive_path"], t
                 )
                 n_80 = (len(archive_dataset) * 8) // 10
                 n_20 = len(archive_dataset) - n_80
                 training_dataset, validation_dataset = torch.utils.data.random_split(
                     archive_dataset, [n_80, n_20]
                 )
-                training_dataset = DataLoader(training_dataset, batch_size=self.parameters['AL_main']['train_dataset_batch_size'])
+                training_dataset = DataLoader(training_dataset, batch_size=self.parameters['ActiveLabeler']['train_dataset_batch_size'])
                 validation_dataset = DataLoader(validation_dataset, batch_size=1)
 
                 tic = time.perf_counter()
@@ -722,11 +748,11 @@ class Pipeline:
             )
 
             #nn and label
-            if self.parameters["AL_main"]["nn"] == 1:
+            if self.parameters["ActiveLabeler"]["sampling_nn"] == 1:
                 embs = self.find_emb(strategy_images)
                 imgs = self.search_similar(
                     strategy_images,
-                    int(self.parameters["AL_main"]["n_closest"]),
+                    int(self.parameters["ActiveLabeler"]["n_closest"]),
                     curr_model,
                     embs,
                 )
@@ -740,9 +766,9 @@ class Pipeline:
             else:
                 imgs = strategy_images
 
-            self.parameters['nn']['labeled_path'] =self.parameters['AL_main']['newly_labled_path']
-            self.parameters['nn']['positive_path'] = self.parameters['AL_main']['newly_labled_path'] + "/positive"
-            self.parameters['nn']['negative_path']= self.parameters['AL_main']['newly_labled_path'] + "/negative"
+            self.parameters['nn']['labeled_path'] =self.parameters['ActiveLabeler']['newly_labled_path']
+            self.parameters['nn']['positive_path'] = self.parameters['ActiveLabeler']['newly_labled_path'] + "/positive"
+            self.parameters['nn']['negative_path']= self.parameters['ActiveLabeler']['newly_labled_path'] + "/negative"
 
             self.label_data(imgs)
 
@@ -750,7 +776,7 @@ class Pipeline:
             tmp1 = len(
                 list(
                     paths.list_images(
-                        self.parameters["AL_main"]["archive_path"] + "/positive"
+                        self.parameters["ActiveLabeler"]["archive_path"] + "/positive"
                     )
                 )
             )
@@ -758,7 +784,7 @@ class Pipeline:
             tmp3 = len(
                 list(
                     paths.list_images(
-                        self.parameters["AL_main"]["archive_path"] + "/negative"
+                        self.parameters["ActiveLabeler"]["archive_path"] + "/negative"
                     )
                 )
             )

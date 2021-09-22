@@ -1,42 +1,29 @@
 verbose:            0
 seed:               100
 device:             cuda
+data_path:          /content/Dataset
+runtime_path:       /content/runtime
+swipe_label_batch_size:         10
 
 model:
   model_type:       simclr
   model_path:       /content/models/SIMCLR_ssl.ckpt
   image_size:       256
   embedding_size:   32
-
-data:
-  data_path:        /content/Dataset
+  model_config_path:     /content/Active-Labeler/model_config.yml
 
 seed_dataset:
- seed_nn:                1
+ seed_nn:           1
  ref_img_path:      /content/UCMerced_LandUse/Images/airplane/airplane01.jpg
  seed_data_path:    /content/seed_dataset
 
-swipe_labeler:
-  unlabled_path:            /content/runtime/swipe/unlabeled
-  labeled_path:             /content/runtime/swipe/labeled
-  unsure_path:              /content/runtime/swipe/unsure
-  swipelabel_batch_size:         10
-
 annoy:
     num_trees:      50
-    annoy_path:     /content/runtime/NN_local/annoy_file.ann
-
-TrainModels:
-  model_config_path:     /content/Active-Labeler/model_config.yml
 
 ActiveLabeler:
   sample_size:      20
   sampling_strategy: "gaussian"
-  activelabel_batch_size: 128
-
-AL_main:
-  newly_labled_path:        /content/runtime/swipe/new_label #todo needed ?
-  archive_path:             /content/runtime/swipe/archive
+  active_label_batch_size: 128
   sampling_nn:              0
   n_closest:                5
   train_dataset_batch_size: 32
