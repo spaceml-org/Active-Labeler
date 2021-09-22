@@ -70,36 +70,31 @@ __Pipeline Config__: Arguments used by the ```main.py``` present in [```pipeline
 
 | Argument     | Description        | 
 | ------------ | ------------- | 
+|```verbose```|        ```1``` prints all logs, ```0``` does not print logs|
+|```seed```| Seed used to save the state of a random functions used in the main pipeline for reproducibility |
+|```data_path```| Path to dataset|
+|```runtime_path```| Path to folder where all runtime files will be stored|
+|```swipe_label_batch_size```| Labeling batch size for Swipe Labeler|
 |```model_type```|     Type of Self-Supervised Learning model used: ```SimCLR```, ```SimSiam```|
 |```model_path```|     Path to the .ckpt file containing the model (.ckpt file is obtained by training with [Self-Supervised Learner](https://github.com/spaceml-org/Self-Supervised-Learner))|
 |```image_size```|     Size of input images|
 |```embedding_size```| Size of model's output representations |
-|```verbose```|        ```1``` prints all logs, ```0``` does not print logs|
-|```seed```| Seed used to save the state of a random functions used in the main pipeline for reproducibility |
-|```data_path```| Path to dataset|
-|```metrics```| ```1``` to obtain empirical metrics about the pipeline by using predictions on the validation dataset, ```0``` for no data |
-|```metric_csv_path```| Path to csv containing metrics data|
-|```prob_csv_path```| Path to csv containing prediction probilities for each iteration|
-|```ref_img_path```| Path to reference image used to curate seed dataset|
-|```unlabled_path```| Path to unlabled images for Swipe Labeler|
-|```labeled_path```| Path to labeled images for Swipe Labeler|
-|```positive_path```| Path to positive images for Swipe Labeler|
-|```negative_path```| Path to negative images for Swipe Labeler|
-|```unsure_path```| Path to unsure images for Swipe Labeler|
-|```swipelabel_batch_size```| Labeling batch size for Swipe Labeler|
-|```num_trees```| Effects the build time and the index size. A larger value will give more accurate results, but larger indexes. More information on what trees in Annoy do can be found [here](https://github.com/spotify/annoy#how-does-it-work).|
-|```annoy_path```| Path to save ```.ann``` annoy file|
-|```config_path```| Path to ```model_config.yml``` file|
+|```model_config_path```| Path to ```model_config.yml``` file|
+|```seed_nn```| ```1``` to use nearest neighbour method on the reference image to curate seed dataset, ```0``` to use already existing seed_dataset|
+|```ref_img_path```| Path to reference image used to curate seed dataset, needed if ```seed_nn``` is  ```1```|
+|```seed_data_path```| Path to your existing seed_dataset, needed if ```seed_nn``` is  ```0```|
+|```num_trees```| Effects the annoy tree build time and the index size. A larger value will give more accurate results, but larger indexes. More information on Annoy trees can be found [here](https://github.com/spotify/annoy#how-does-it-work).|
 |```sample_size```| Numbebr of images to be picked by the Active Labeler strategy|
 |```sampling_strategy```| Type of Active Labeler strategy used: ```random```, ```guassian```, ```uncertainty``` |
-|```batch_size```| Batch size for Active Labeler|
-|```newly_labled_path```|  Path to store the labled images in the ongoing iteration|
-|```archive_path```| Path to store the the labled images from the previous iterations|
-|```nn```| ```1``` to do nearest neighbour search on the images picked by the Active Labeler strategy in each iteration|
+|```active_label_batch_size```| Batch size for Active Labeler|
+|```sampling_nn```| ```1``` to do nearest neighbour search on the images picked by the Active Labeler strategy in each iteration|
 |```n_closest```| Number of nearest neighbour images for each strategy image|
 |```train_dataset_batch_size ```| Batch size for training dataset|
-|```nn```| ```1``` to use nearest neighbour method on the reference image to curate seed dataset, ```0``` to use already existing seed_dataset|
-|```seed_data_path```| Path to your existing seed_dataset|
+|```metrics```| ```1``` to obtain empirical metrics about the pipeline by using predictions on the validation dataset, ```0``` for no data |
+|```pos_class```| Name of positive class, needed if ```metrics``` is ```1``` or if ```simulate_label``` is ```1```|
+|```metric_csv_path```| Path to csv containing metrics data|
+|```prob_csv_path```| Path to csv containing prediction probilities for each iteration|
+|```simulate_label```| Function that simulates labeling for testing purposes by check if ```pos_class``` is part of the image name |
 
 <br>
 
