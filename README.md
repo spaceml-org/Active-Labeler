@@ -18,7 +18,7 @@
 The Active Labeler is a CLI tool that facilitates labeling datasets with just a SINGLE line of code. The tool comes fully equipped with various Active Learning strategies and other customizable features to suit one’s requirements.
 
 ## What is Active Learning?
-Bringing about a model’s full potential with limited data is the core concept behind Active Learning. This follows several strategies and other techniques that identify points based on a model’s difficulty in understanding them. 
+Deep learning has a strong greedy attribute to the labeled data. While, in the real world, obtaining a comprehensive set of unlabeled datasets is relatively simple, the manual labeling of data comes at a high cost; this is especially true for those fields where labeling requires a high degree of expert insight. A way of maximizing the performance gain of a deep learning model while labeling a small number of images can significantly impact the practical implementations of AI in multiple fields. Active learning is such a method. It aims to select the most valuable samples from the unlabeled dataset and transfer them to a human annotator for labeling. This method of selective sampling of data to label reduces the cost of labeling while still maintaining performance.
 Some of the strategies present in this tool includes:
 -  Random
     * Random function is used to pick examples uniformly from the entire unlabeled dataset.
