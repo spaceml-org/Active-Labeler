@@ -4,81 +4,29 @@ sys.path.insert(0, "./Active-Labeler/ActiveLabeler-main")
 sys.path.insert(0, "./Active-Labeler/ActiveLabeler-main/Self-Supervised-Learner")
 sys.path.insert(0, "./Active-Labeler/ActiveLabeler-main/ActiveLabelerModels")
 
-import shutil
-import torch
-import requests
-from IPython import get_ipython
-from IPython import get_ipython
-from tqdm.notebook import tqdm
-from torchvision import transforms
-import os
 import pathlib
-from imutils import paths
-import json
-import PIL.Image as Image
-import torch
-import numpy as np
-import matplotlib.pyplot as plt
-from annoy import AnnoyIndex
-from argparse import ArgumentParser
-from torch.utils.data import DataLoader
-from torchvision import transforms
-import matplotlib.image as mpimg
-from imutils import paths
-import time
 import yaml
 import random
 import torchvision
-from torchvision import transforms
-from sys import exit
-
-##sim search
-from torch.utils.data import DataLoader
-from annoy import AnnoyIndex
-from torchvision import transforms
-from argparse import ArgumentParser
-
-import torchvision.datasets as datasets
-import torch
-import pickle
 import os
 from tqdm.notebook import tqdm
-from torchvision import transforms
 from sklearn.metrics import precision_score, recall_score, f1_score, accuracy_score
 import time
 import pandas as pd
-
 import shutil
-
 import PIL.Image as Image
 import torch
 import numpy as np
-import matplotlib.pyplot as plt
 from annoy import AnnoyIndex
-from argparse import ArgumentParser
 from torch.utils.data import DataLoader
 from torchvision import transforms
-import matplotlib.image as mpimg
 from imutils import paths
-import sys
 import logging
 
-print("START")
-
-# sys.path.insert(0, "Self-Supervised-Learner")
-# sys.path.insert(0, "./ActiveLabeler-main")
-# sys.path.insert(0, "./ActiveLabeler-main/Self-Supervised-Learner")
-# sys.path.insert(0, "./ActiveLabeler-main/ActiveLabelerModels")
-
-from models import CLASSIFIER
 from models import SIMCLR
 from models import SIMSIAM
 from ActiveLabeler import ActiveLabeler
 from TrainModels import TrainModels
-
-# from SimilaritySearch import SimilaritySearch
-# from Diversity_Algorithm.diversity_func import Diversity
-
 
 class Pipeline:
     def __init__(self, config_path):
@@ -189,7 +137,7 @@ class Pipeline:
     def generate_embeddings(
         self, image_size, embedding_size, model, dataset_imgs, model_type="model"
     ):
-        dataset_paths = [(self.parameters["data"]["data_path"] + "/Unlabeled/" + image_name) for image_name in dataset_imgs]
+        dataset_paths = [(self.parameters["data_path"] + "/Unlabeled/" + image_name) for image_name in dataset_imgs]
         t = transforms.Resize((image_size, image_size))
         if self.parameters["device"] == "cuda":
             embedding_matrix = torch.empty(size=(0, embedding_size)).cuda()
@@ -266,7 +214,7 @@ class Pipeline:
         for image_name in image_names:
             #copy image to be labled into unlabeled path
             image_path_copy = (
-                self.parameters["data"]["data_path"] + "/Unlabeled/" + image_name
+                self.parameters["data_path"] + "/Unlabeled/" + image_name
             )
             shutil.copy(image_path_copy, self.parameters["swipe_labeler"]["unlabeled_path"])
 
@@ -471,12 +419,12 @@ class Pipeline:
             self.metrics["recall"].append(rec)
             self.metrics["accuracy"].append(acc)
 
-    @property
     def main(self):
         # offline
         # TODO printing and logging
 
         # runtime folder sub directories - contains all runtime content
+        self.parameters["swipe_labeler"]={}
         self.parameters["swipe_labeler"]["labeled_path"] = os.path.join(self.parameters["runtime_path"],
                                                                         "swipe/labeled")
         self.parameters["swipe_labeler"]["positive_path"] = os.path.join(
@@ -488,7 +436,6 @@ class Pipeline:
 
         self.parameters["swipe_labeler"]["unsure_path"] = os.path.join(self.parameters["runtime_path"],
                                                                        "swipe/unsure")
-
         self.parameters["annoy"]["annoy_path"] = os.path.join(self.parameters["runtime_path"],
                                                               "NN_local/annoy_file.ann")
 
@@ -520,10 +467,10 @@ class Pipeline:
         model = self.load_model(
             self.parameters["model"]["model_type"],
             self.parameters["model"]["model_path"],
-            self.parameters["data"]["data_path"],
+            self.parameters["data_path"],
         )
 
-        tmp = list(paths.list_images(self.parameters["data"]["data_path"]))
+        tmp = list(paths.list_images(self.parameters["data_path"]))
         self.unlabeled_list = [i.split("/")[-1] for i in tmp]
         self.dataset_paths = [i.split("/")[-1] for i in tmp]
 
@@ -569,7 +516,7 @@ class Pipeline:
         activelabeler = ActiveLabeler(
             self.create_emb_list(self.unlabeled_list),
             [
-                self.parameters["data"]["data_path"] + "/Unlabeled/" + image_name
+                self.parameters["data_path"] + "/Unlabeled/" + image_name
                 for image_name in self.unlabeled_list
             ],
             self.parameters['model']['image_size'],
@@ -580,7 +527,7 @@ class Pipeline:
         train_models = TrainModels(
             self.parameters["model"]["model_config_path"],
             "./final_model.ckpt",
-            self.parameters["data"]["data_path"],
+            self.parameters["data_path"],
             "AL",
         )
 
@@ -750,7 +697,7 @@ class Pipeline:
                 activelabeler.get_embeddings_offline(
                     mapping,
                     [
-                        self.parameters["data"]["data_path"] + "/Unlabeled/" + image_name
+                        self.parameters["data_path"] + "/Unlabeled/" + image_name
                         for image_name in self.unlabeled_list
                     ],
                 )
@@ -791,9 +738,9 @@ class Pipeline:
             else:
                 imgs = strategy_images
 
-            self.parameters['nn']['labeled_path'] =self.parameters['ActiveLabeler']['newly_labled_path']
-            self.parameters['nn']['positive_path'] = self.parameters['ActiveLabeler']['newly_labled_path'] + "/positive"
-            self.parameters['nn']['negative_path']= self.parameters['ActiveLabeler']['newly_labled_path'] + "/negative"
+            self.parameters["swipe_labeler"]["labeled_path"] =self.parameters['ActiveLabeler']['newly_labled_path']
+            self.parameters["swipe_labeler"]['positive_path'] = self.parameters['ActiveLabeler']['newly_labled_path'] + "/positive"
+            self.parameters["swipe_labeler"]['negative_path']= self.parameters['ActiveLabeler']['newly_labled_path'] + "/negative"
 
             self.label_data(imgs)
 
@@ -831,7 +778,7 @@ class Pipeline:
             activelabeler.get_embeddings_offline(
                 mapping,
                 [
-                    self.parameters["data"]["data_path"] + "/Unlabeled/" + image_name
+                    self.parameters["data_path"] + "/Unlabeled/" + image_name
                     for image_name in self.unlabeled_list
                 ],
             )
