@@ -1,3 +1,9 @@
+import sys
+sys.path.insert(0, "./Active-Labeler")
+sys.path.insert(0, "./Active-Labeler/ActiveLabeler-main")
+sys.path.insert(0, "./Active-Labeler/ActiveLabeler-main/Self-Supervised-Learner")
+sys.path.insert(0, "./Active-Labeler/ActiveLabeler-main/ActiveLabelerModels")
+
 import shutil
 import torch
 import requests
@@ -55,21 +61,9 @@ from torchvision import transforms
 import matplotlib.image as mpimg
 from imutils import paths
 import sys
-
-
 import logging
-#initial log settings
-log_file = "active_labeler.log"
-logging.basicConfig(
-    level=logging.DEBUG,
-    format='%(asctime)s - %(levelname)-8s - %(funcName)-15s - %(message)s',
-    datefmt='%d-%b-%y %H:%M:%S',
-    handlers=[
-        logging.FileHandler(log_file, mode='a'),
-        logging.StreamHandler()
-    ]
-)
-logging.info("APP START")
+
+print("START")
 
 # sys.path.insert(0, "Self-Supervised-Learner")
 # sys.path.insert(0, "./ActiveLabeler-main")
@@ -88,6 +82,7 @@ from TrainModels import TrainModels
 
 class Pipeline:
     def __init__(self, config_path):
+        print("Initialization")
         self.config_path = config_path
         self.dataset_paths = [] #contains image names corresponding to emb
         self.unlabeled_list = []
@@ -120,25 +115,37 @@ class Pipeline:
             "actual_pos_imgs_0.5": [],
         }
         self.prediction_prob = {}
-        logging.info("load config")
+
+        print("Load Config")
         self.parameters= self.load_config(self.config_path)
 
-        self.parameters["swipe_labeler"]["labeled_path"] = os.path.join(self.parameters["runtime_path"],"swipe/labeled")
-        self.parameters["swipe_labeler"]["positive_path"]= os.path.join(self.parameters["swipe_labeler"]["labeled_path"], "positive")
-        self.parameters["swipe_labeler"]["negative_path"] = os.path.join(self.parameters["swipe_labeler"]["labeled_path"], "negative")
-        self.parameters["swipe_labeler"]["unlabeled_path"] = os.path.join(self.parameters["runtime_path"],
-                                                                         "swipe/unlabeled")
+        #set seed
+        # set seed
+        random.seed(self.parameters["seed"])
+        np.random.seed(self.parameters["seed"])
 
-        self.parameters["swipe_labeler"]["unsure_path"] = os.path.join(self.parameters["runtime_path"],
-                                                                         "swipe/unsure")
+        # log settings
+        log_file = "active_labeler.log"
+        if self.parameters["verbose"] == 0:
+            logging.basicConfig(
+                level=logging.DEBUG,
+                format='%(asctime)s - %(levelname)-8s - %(funcName)-15s - %(message)s',
+                datefmt='%d-%b-%y %H:%M:%S',
+                handlers=[
+                    logging.FileHandler(log_file, mode='a'),
+                ]
+            )
+        else:
+            logging.basicConfig(
+                level=logging.DEBUG,
+                format='%(asctime)s - %(levelname)-8s - %(funcName)-15s - %(message)s',
+                datefmt='%d-%b-%y %H:%M:%S',
+                handlers=[
+                    logging.FileHandler(log_file, mode='a'),
+                    logging.StreamHandler()
+                ]
+            )
 
-        self.parameters["annoy"]["annoy_path"] = os.path.join(self.parameters["runtime_path"],
-                                                                               "NN_local/annoy_file.ann")
-
-        self.parameters["ActiveLabeler"]["newly_labled_path"] = os.path.join(self.parameters["runtime_path"],
-                                                              "swipe/new_label")
-        self.parameters["ActiveLabeler"]["archive_path"] = os.path.join(self.parameters["runtime_path"],
-                                                                       "swipe/archive")
 
 
     # similiarity search class
@@ -469,20 +476,33 @@ class Pipeline:
         # offline
         # TODO printing and logging
 
-        # +++++++++++++++++++++++++++++++++++++++++++++++++++++
-        # seed dataset
+        # runtime folder sub directories - contains all runtime content
+        self.parameters["swipe_labeler"]["labeled_path"] = os.path.join(self.parameters["runtime_path"],
+                                                                        "swipe/labeled")
+        self.parameters["swipe_labeler"]["positive_path"] = os.path.join(
+            self.parameters["swipe_labeler"]["labeled_path"], "positive")
+        self.parameters["swipe_labeler"]["negative_path"] = os.path.join(
+            self.parameters["swipe_labeler"]["labeled_path"], "negative")
+        self.parameters["swipe_labeler"]["unlabeled_path"] = os.path.join(self.parameters["runtime_path"],
+                                                                          "swipe/unlabeled")
 
-        # directories
-        for i in [self.parameters["swipe_labeler"]["unlabeled_path"], self.parameters["swipe_labeler"]["labeled_path"], self.parameters["swipe_labeler"]["positive_path"],
-                  self.parameters["swipe_labeler"]["negative_path"], self.parameters["swipe_labeler"]["unsure_path"],
-                  os.path.join(self.parameters["ActiveLabeler"]["newly_labled_path"], "positive"),
-                  os.path.join(self.parameters["ActiveLabeler"]["newly_labled_path"], "negative"),
-                  os.path.join(self.parameters["ActiveLabeler"]["archive_path"], "positive"),
-                  os.path.join(self.parameters["ActiveLabeler"]["archive_path"], "negative"),
-                  '/'.join(self.parameters["annoy"]["annoy_path"].split('/')[:-1])]:
-            if os.path.exists(i):
-                shutil.rmtree(i)
-        for i in [self.parameters["swipe_labeler"]["unlabeled_path"], self.parameters["swipe_labeler"]["labeled_path"], self.parameters["swipe_labeler"]["positive_path"],
+        self.parameters["swipe_labeler"]["unsure_path"] = os.path.join(self.parameters["runtime_path"],
+                                                                       "swipe/unsure")
+
+        self.parameters["annoy"]["annoy_path"] = os.path.join(self.parameters["runtime_path"],
+                                                              "NN_local/annoy_file.ann")
+
+        self.parameters["ActiveLabeler"]["newly_labled_path"] = os.path.join(self.parameters["runtime_path"],
+                                                                             "swipe/new_label")
+        self.parameters["ActiveLabeler"]["archive_path"] = os.path.join(self.parameters["runtime_path"],
+                                                                        "swipe/archive")
+
+        # creating the directories
+        if os.path.exists(self.parameters["runtime_path"]):
+            shutil.rmtree(self.parameters["runtime_path"])
+
+        for i in [self.parameters["swipe_labeler"]["unlabeled_path"],
+                  self.parameters["swipe_labeler"]["positive_path"],
                   self.parameters["swipe_labeler"]["negative_path"], self.parameters["swipe_labeler"]["unsure_path"],
                   os.path.join(self.parameters["ActiveLabeler"]["newly_labled_path"], "positive"),
                   os.path.join(self.parameters["ActiveLabeler"]["newly_labled_path"], "negative"),
@@ -490,6 +510,11 @@ class Pipeline:
                   os.path.join(self.parameters["ActiveLabeler"]["archive_path"], "negative"),
                   '/'.join(self.parameters["annoy"]["annoy_path"].split('/')[:-1])]:
             pathlib.Path(i).mkdir(parents=True, exist_ok=True)
+
+        # +++++++++++++++++++++++++++++++++++++++++++++++++++++
+        # seed dataset
+
+
 
         logging.info("load model")
         model = self.load_model(
