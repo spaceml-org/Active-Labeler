@@ -28,7 +28,7 @@ ActiveLabeler:
   n_closest:                5
   train_dataset_batch_size: 32
 
- test:
+test:
    metrics: 0
    pos_class: airplane
    metric_csv_path: /content/metrics.csv
