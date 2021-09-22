@@ -11,7 +11,7 @@
 [![Pip Package](https://img.shields.io/badge/Pip%20Package-Coming%20Soon-0073b7.svg)](https://pypi.org/project/pip/)
 [![Docker](https://img.shields.io/badge/Docker%20Image-Coming%20Soon-34a0ef.svg)](https://www.docker.com/)
    
-[![Google Colab Notebook Example](https://colab.research.google.com/assets/colab-badge.svg)](https://github.com/spaceml-org/Self-Supervised-Learner/blob/simsiam/tutorials/PythonColabTutorial_Merced.ipynb)
+[![Google Colab Notebook Example](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/18FDsvNsTm65sshmo9XYU04ITqmfgSEv4?usp=sharing)
    
 </div>
 
@@ -20,13 +20,13 @@ The Active Labeler is a CLI tool that facilitates labeling datasets with just a 
 ## What is Active Learning?
 Deep learning has a strong greedy attribute to the labeled data. While, in the real world, obtaining a comprehensive set of unlabeled datasets is relatively simple, the manual labeling of data comes at a high cost; this is especially true for those fields where labeling requires a high degree of expert insight. A way of maximizing the performance gain of a deep learning model while labeling a small number of images can significantly impact the practical implementations of AI in multiple fields. Active learning is such a method. It aims to select the most valuable samples from the unlabeled dataset and transfer them to a human annotator for labeling. This method of selective sampling of data to label reduces the cost of labeling while still maintaining performance.
 Some of the strategies present in this tool includes:
--  Random
-    * Random function is used to pick examples uniformly from the entire unlabeled dataset.
--  Uncertainty
+-  [Random](https://numpy.org/doc/stable/reference/random/index.html)
+
+    * Random function is used to pick examples uniformly from the entire unlabeled dataset. 
+-  [Uncertainty](https://link.springer.com/article/10.1007/s10618-016-0460-3)
     * Examples that lie near the decision boundary of classifer model are picked.
 -  Gaussian 
     * Gaussian function is used to pick examples based on their predictions and a gaussian curve. 
-
 
 ## Swipe Labeler:
 [Swipe Labeler](https://github.com/spaceml-org/Swipe-Labeler) is a GUI based tool to enable labeling of data.
