@@ -23,7 +23,7 @@ Some of the strategies present in this tool includes:
 -  [Random](https://numpy.org/doc/stable/reference/random/index.html)
 
     * Random function is used to pick examples uniformly from the entire unlabeled dataset. 
--  [Uncertainty](https://link.springer.com/article/10.1007/s10618-016-0460-3)
+-  [Uncertainty](https://livebook.manning.com/book/human-in-the-loop-machine-learning/chapter-3/172)
     * Examples that lie near the decision boundary of classifer model are picked.
 -  Gaussian 
     * Gaussian function is used to pick examples based on their predictions and a gaussian curve. 
