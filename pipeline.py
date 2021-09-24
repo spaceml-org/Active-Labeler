@@ -20,7 +20,6 @@ import numpy as np
 from annoy import AnnoyIndex
 from torch.utils.data import DataLoader
 from torchvision import transforms
-from torchvision.datasets import ImageFolder
 from imutils import paths
 import logging
 
@@ -74,7 +73,8 @@ class Pipeline:
         np.random.seed(self.parameters["seed"])
 
         # log settings
-        log_file = os.path.join(self.parameters["runtime_path"],"active_labeler.log")
+        #log_file = os.path.join(self.parameters["runtime_path"],"active_labeler.log")
+        log_file = "active_labeler.log"
         if self.parameters["verbose"] == 0:
             logging.basicConfig(
                 level=logging.DEBUG,
@@ -260,7 +260,8 @@ class Pipeline:
         else:
             batch_size = min(len(list(paths.list_images(unlabeled_path))),self.parameters['swipe_label_batch_size'])
             swipe_dir = os.path.join("Active-Labeler/",'Swipe-Labeler-main/api/api.py')
-            swipe_log = f"> {os.path.join(self.parameters['runtime_path'], 'swipelabeler.log')}"
+            swipe_log = "> swipelabeler.log"
+            #swipe_log = f"> {os.path.join(self.parameters['runtime_path'], 'swipelabeler.log')}"
             label = f"python3 {swipe_dir} --path_for_unlabeled='{unlabeled_path}' --path_for_pos_labels='{positive_path}' --path_for_neg_labels='{negative_path}' --path_for_unsure_labels='{unsure_path}' --batch_size={batch_size} {swipe_log}"
             logging.debug(label)
             ossys = os.system(label)
@@ -890,5 +891,5 @@ class Pipeline:
                 target = os.path.join(neg_path, img_paths[i].split("/")[-1])
                 shutil.copy(img_paths[i], target)
 
-        logging.INFO( f"final dataset - pos imgs - {len(list(paths.list_images(pos_path)))}" )
-        logging.INFO( f"final dataset - neg imgs - {len(list(paths.list_images(neg_path)))}" )
+        logging.info( f"final dataset - pos imgs - {len(list(paths.list_images(pos_path)))}" )
+        logging.info( f"final dataset - neg imgs - {len(list(paths.list_images(neg_path)))}" )
