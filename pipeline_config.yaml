@@ -10,7 +10,7 @@ model:
   model_path:       /content/models/SIMCLR_ssl.ckpt
   image_size:       256
   embedding_size:   32
-  model_config_path:     /content/Active-Labeler/model_config.yml
+  model_config_path:     /content/Active-Labeler/model_config.yaml
 
 seed_dataset:
  seed_nn:           1
