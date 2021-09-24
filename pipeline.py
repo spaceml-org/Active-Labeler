@@ -20,6 +20,7 @@ import numpy as np
 from annoy import AnnoyIndex
 from torch.utils.data import DataLoader
 from torchvision import transforms
+from torchvision.datasets import ImageFolder
 from imutils import paths
 import logging
 
@@ -443,10 +444,14 @@ class Pipeline:
                                                                              "swipe/new_label")
         self.parameters["ActiveLabeler"]["archive_path"] = os.path.join(self.parameters["runtime_path"],
                                                                         "swipe/archive")
+        self.parameters["ActiveLabeler"]["final_dataset_path"] = os.path.join("./final_dataset")
 
         # creating the directories
         if os.path.exists(self.parameters["runtime_path"]):
             shutil.rmtree(self.parameters["runtime_path"])
+
+        if os.path.exists(self.parameters["ActiveLabeler"]["final_dataset_path"]):
+            shutil.rmtree(self.parameters["ActiveLabeler"]["final_dataset_path"])
 
         for i in [self.parameters["swipe_labeler"]["unlabeled_path"],
                   self.parameters["swipe_labeler"]["positive_path"],
@@ -455,6 +460,8 @@ class Pipeline:
                   os.path.join(self.parameters["ActiveLabeler"]["newly_labled_path"], "negative"),
                   os.path.join(self.parameters["ActiveLabeler"]["archive_path"], "positive"),
                   os.path.join(self.parameters["ActiveLabeler"]["archive_path"], "negative"),
+                  os.path.join(self.parameters["ActiveLabeler"]["final_dataset_path"], "positive"),
+                  os.path.join(self.parameters["ActiveLabeler"]["final_dataset_path"], "negative"),
                   '/'.join(self.parameters["annoy"]["annoy_path"].split('/')[:-1])]:
             pathlib.Path(i).mkdir(parents=True, exist_ok=True)
 
@@ -528,7 +535,6 @@ class Pipeline:
             self.parameters["model"]["model_config_path"],
             "./final_model.ckpt",
             self.parameters["data_path"],
-            "AL",
         )
 
         def to_tensor(pil):
@@ -783,9 +789,6 @@ class Pipeline:
                 ],
             )
 
-            #save model
-            train_models.save_model()
-
             # --TEST
             if self.parameters['test']['metrics']:
 
@@ -870,3 +873,22 @@ class Pipeline:
                 for i in col_names:
                     df[i] = df[i].astype(float).round(2)
                 df.to_csv(self.parameters["test"]["metric_csv_path"], index=False)
+
+            train_models.save_model()
+
+            #saving final dataset based on predictions
+            unlabeled_predictions, img_paths = activelabeler.get_prob()
+
+            pos_path = os.path.join(self.parameters["ActiveLabeler"]["final_dataset_path"],"positive")
+            neg_path = os.path.join(self.parameters["ActiveLabeler"]["final_dataset_path"],"negative")
+
+            for i in range(len(img_paths)):
+                if unlabeled_predictions[i] > 0.5:
+                    target = os.path.join(pos_path, img_paths[i].split("/")[-1])
+                    shutil.move(img_paths[i], target)
+                else:
+                    target = os.path.join(neg_path, img_paths[i].split("/")[-1])
+                    shutil.move(img_paths[i], target)
+
+            logging.INFO( f"final dataset - pos imgs - {len(list(paths.list_images(pos_path)))}" )
+            logging.INFO( f"final dataset - neg imgs - {len(list(paths.list_images(neg_path)))}" )
