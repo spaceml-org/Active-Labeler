@@ -28,6 +28,9 @@ Some of the strategies present in this tool includes:
 -  Gaussian 
     * Gaussian function is used to pick examples based on their predictions and a gaussian curve. 
 
+<br>
+<img src="https://github.com/spaceml-org/Active-Labeler/blob/main/ActiveLabeler_diagram.jpeg" >
+
 ## Swipe Labeler:
 [Swipe Labeler](https://github.com/spaceml-org/Swipe-Labeler) is a GUI based tool to enable labeling of data.
 It supports:
