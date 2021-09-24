@@ -65,11 +65,11 @@ Dataset/
    
   - Run the application.
    
-      ```python3 main.py --config_path {path_to_config.yml} --class_name {positive_class_name}```
+      ```python3 main.py --config_path {path_to_config.yaml} --class_name {positive_class_name}```
 
 ## Mandatory Arguments
 
-__Pipeline Config__: Arguments used by the ```main.py``` present in [```pipeline_config.yml```](https://github.com/spaceml-org/Active-Labeler/blob/main/pipeline_config.yml)
+__Pipeline Config__: Arguments used by the ```main.py``` present in [```pipeline_config.yaml```](https://github.com/spaceml-org/Active-Labeler/blob/main/pipeline_config.yaml)
 
 | Argument     | Description        | 
 | ------------ | ------------- | 
@@ -82,7 +82,7 @@ __Pipeline Config__: Arguments used by the ```main.py``` present in [```pipeline
 |```model_path```|     Path to the .ckpt file containing the model (.ckpt file is obtained by training with [Self-Supervised Learner](https://github.com/spaceml-org/Self-Supervised-Learner))|
 |```image_size```|     Size of input images|
 |```embedding_size```| Size of model's output representations |
-|```model_config_path```| Path to ```model_config.yml``` file|
+|```model_config_path```| Path to ```model_config.yaml``` file|
 |```seed_nn```| ```1``` to use nearest neighbour method on the reference image to curate seed dataset, ```0``` to use already existing seed_dataset|
 |```ref_img_path```| Path to reference image used to curate seed dataset, needed if ```seed_nn``` is  ```1```|
 |```seed_data_path```| Path to your existing seed_dataset, needed if ```seed_nn``` is  ```0```|
@@ -101,7 +101,7 @@ __Pipeline Config__: Arguments used by the ```main.py``` present in [```pipeline
 
 <br>
 
-__Model Config__: Arguments related to model training present in [```model_config.yml```](https://github.com/spaceml-org/Active-Labeler/blob/main/model_config.yml)
+__Model Config__: Arguments related to model training present in [```model_config.yaml```](https://github.com/spaceml-org/Active-Labeler/blob/main/model_config.yaml)
 
 | Argument     | Description        | 
 | ------------ | ------------- | 
