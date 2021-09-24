@@ -14,7 +14,7 @@ class TrainModels:
     """This class is used to combine the SSL model’s encoder with linear
     classification layers and fine-tune the model on new dataset."""
 
-    def __init__(self, config_path, model_path, unlabled_dataset_path, log_name):
+    def __init__(self, config_path, model_path, unlabled_dataset_path):
         """
         Combines the SSL model’s encoder with linear classification layers initialises
         the training paramenters.
@@ -23,7 +23,6 @@ class TrainModels:
         config_path -- File path of the yaml configuration file that has the model’s training details
         model_path -- Location where you want to save your model
         unlabled_dataset_path -- File path of your unlabeled data in a pytorch ImageFolder structure.
-        log_name -- The name of your saved model
         """
 
         def load_config(config_path):
@@ -35,7 +34,6 @@ class TrainModels:
         self.model_path = model_path
         self.parameters = load_config(config_path)
         random.seed(self.parameters["miscellaneous"]["seed"])
-        self.log_name = log_name
         self.log_count = 0
         # Load the encoder of the SSL model
         if self.parameters["encoder"]["encoder_type"] == "SIMCLR":
