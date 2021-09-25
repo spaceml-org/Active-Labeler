@@ -110,9 +110,9 @@ class Pipeline:
         im = Image.open(image_path).convert("RGB")
         image = np.transpose(im, (2, 0, 1)).copy()
         if self.parameters["device"] == "cuda":
-            im = torch.tensor(image).unsqueeze(0).float().cuda()
+            im = torch.Tensor(np.array(image)).unsqueeze(0).float().cuda()
         elif self.parameters["device"] == "cpu":
-            im = torch.tensor(image).unsqueeze(0).float().cpu()
+            im = torch.Tensor(np.array(image)).unsqueeze(0).float().cpu()
         x = model(im) if model_type == "model" else model.encoder(im)[-1]
         return x[0]
 
@@ -151,9 +151,9 @@ class Pipeline:
                 im = t(im)
                 im = np.asarray(im).transpose(2, 0, 1)
                 if self.parameters["device"] == "cuda":
-                    im = torch.Tensor(im).unsqueeze(0).cuda()
+                    im = torch.Tensor(np.array(im)).unsqueeze(0).cuda()
                 elif self.parameters["device"] == "cpu":
-                    im = torch.Tensor(im).unsqueeze(0).cpu()
+                    im = torch.Tensor(np.array(im)).unsqueeze(0).cpu()
                 if model_type == "model":
                     embedding = model(im)[0]
                 else:  # encoder
