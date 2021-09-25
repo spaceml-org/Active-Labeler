@@ -205,9 +205,9 @@ class TrainModels:
                 if phase == "val" and epoch_acc > best_acc:
                     best_acc = epoch_acc
                     best_model_wts = copy.deepcopy(self.model.state_dict())
-            print()
+
         print(
-            f"Training complete in {(time.time() - since) // 60}m {(time.time() - since) % 60}s"
+            f"\nTraining complete in {(time.time() - since) // 60}m {(time.time() - since) % 60}s"
         )
         print(f"Best val Acc: {best_acc}")
         return best_model_wts
