@@ -69,7 +69,7 @@ Dataset/
    
   - Run the application.
    
-      ```python3 main.py --config_path {path_to_config.yaml} --class_name {positive_class_name}```
+      ```python3 main.py --config_path {path_to_config.yaml} ```
 
 ## Mandatory Arguments
 
