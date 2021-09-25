@@ -40,6 +40,10 @@ It supports:
 Images will be picked one by one from your unlabeled images directory, and presented through the Swipe Labeler GUI. For each image, the user can choose to classify the image as a positive or negative/absent class using the “Accept” or “Reject” button. 
 For more info on how to install and use check [here](https://github.com/spaceml-org/Swipe-Labeler).
 
+When running on Colab, Swipe Labeler cannot be accessed at ```https://localhost:5000/```. Run the following code to obtain an url that allows you to access the Swipe Labeler.
+<br>```from google.colab.output import eval_js```
+<br>```print(eval_js('google.colab.kernel.proxyPort(5000)'))  ```
+
 ## Setup
 Your data must be in the following format (inside a subdirectory) to be used by the pipeline:
 ```
