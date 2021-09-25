@@ -52,7 +52,7 @@ Dataset/
 
 ## How to use?
 
-* For Colab-friendly version and general examples check the [colab notebook](https://colab.research.google.com/drive/16SP5rPTuIaZeNqKMPSxw3NcuizGSgnn8?usp=sharing).
+* For Colab-friendly version and general examples check the [colab notebook](https://github.com/spaceml-org/Curator-Unlabeled-Image-Search-Guide/blob/main/notebooks/SSL%2BImage_Similarity_Search%2BActive_Labeler.ipynb).
 * For a CLI-Version, simply do:
    
   - Clone the code.
