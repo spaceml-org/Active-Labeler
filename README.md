@@ -65,11 +65,11 @@ Dataset/
    
   - Install requirements.
 
-      ```pip install -r requirements.txt```
+      ```pip install -r ./Active-Labeler/requirements.txt```
    
   - Run the application.
    
-      ```python3 main.py --config_path {path_to_config.yaml} ```
+      ```python3 ./Active-Labeler/main.py  --config_path {path_to_config.yaml} ```
 
 ## Mandatory Arguments
 
