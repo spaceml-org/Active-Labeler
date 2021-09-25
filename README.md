@@ -40,6 +40,10 @@ It supports:
 Images will be picked one by one from your unlabeled images directory, and presented through the Swipe Labeler GUI. For each image, the user can choose to classify the image as a positive or negative/absent class using the “Accept” or “Reject” button. 
 For more info on how to install and use check [here](https://github.com/spaceml-org/Swipe-Labeler).
 
+When running on Colab, Swipe Labeler cannot be accessed at ```https://localhost:5000/```. Run the following code to obtain an url that allows you to access the Swipe Labeler.
+<br>```from google.colab.output import eval_js```
+<br>```print(eval_js('google.colab.kernel.proxyPort(5000)'))  ```
+
 ## Setup
 Your data must be in the following format (inside a subdirectory) to be used by the pipeline:
 ```
@@ -52,7 +56,7 @@ Dataset/
 
 ## How to use?
 
-* For Colab-friendly version and general examples check the [colab notebook](https://colab.research.google.com/drive/16SP5rPTuIaZeNqKMPSxw3NcuizGSgnn8?usp=sharing).
+* For Colab-friendly version and general examples check the [colab notebook](https://github.com/spaceml-org/Curator-Unlabeled-Image-Search-Guide/blob/main/notebooks/SSL%2BImage_Similarity_Search%2BActive_Labeler.ipynb).
 * For a CLI-Version, simply do:
    
   - Clone the code.
@@ -61,11 +65,11 @@ Dataset/
    
   - Install requirements.
 
-      ```pip install -r requirements.txt```
+      ```pip install -r ./Active-Labeler/requirements.txt```
    
   - Run the application.
    
-      ```python3 main.py --config_path {path_to_config.yaml} --class_name {positive_class_name}```
+      ```python3 ./Active-Labeler/main.py  --config_path {path_to_config.yaml} ```
 
 ## Mandatory Arguments
 
