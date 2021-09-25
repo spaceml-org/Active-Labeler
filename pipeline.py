@@ -9,7 +9,7 @@ import yaml
 import random
 import torchvision
 import os
-from tqdm.notebook import tqdm
+from tqdm import tqdm
 from sklearn.metrics import precision_score, recall_score, f1_score, accuracy_score
 import time
 import pandas as pd
