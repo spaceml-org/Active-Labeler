@@ -29,53 +29,57 @@ from ActiveLabeler import ActiveLabeler
 from TrainModels import TrainModels
 
 class Pipeline:
-    def __init__(self, config_path):
-        print("Initialization")
-        self.config_path = config_path
-        self.dataset_paths = [] #contains image names corresponding to emb
-        self.unlabeled_list = []
-        self.labled_list = []
-        self.embeddings = None
-        self.div_embeddings = None
-        self.initialize_emb_counter = 0
-        self.metrics = {
-            "class": [],
-            "step": [],
-            "model_type": [],
-            "train_ratio": [],
-            "pos_train_img": [],
-            "neg_train_imgs": [],
-            "train_time": [],
-            "labled_pos": [],
-            "labled_neg": [],
-            "f1_score": [],
-            "precision": [],
-            "accuracy": [],
-            "recall": [],
-            "pos_class_confidence_0.8": [],
-            "pos_class_confidence_0.5": [],
-            "pos_class_confidence_median": [],
-            "neg_class_confidence_0.8": [],
-            "neg_class_confidence_0.5": [],
-            "neg_class_confidence_median": [],
-            "total_labeling_effort": [],
-            "actual_pos_imgs_0.8": [],
-            "actual_pos_imgs_0.5": [],
-        }
-        self.prediction_prob = {}
+    """This class uses Nearest Neighbour Search to curate the seed dataset and then calls on the ActiveLabeler and TrainModels class to label images using Active Learning strategies."""
 
-        print("Load Config")
+    def __init__(self, config_path):
+        """Pipeline Class Initialization
+
+        arguments:
+        config_path -- File path of the .yaml pipeline configuration file
+        """
+        print("\nPipeline Class Initialization")
+        self.config_path = config_path
+        self.dataset_paths = []                 #contains image names corresponding to emb
+        self.unlabeled_list = []                #list containing names of unlabeled images
+        self.labeled_list = []                  #list  containing names of labeled images
+        self.embeddings = None                  #numpy array of embeddings corresponding to each image in dataset_paths
+        self.div_embeddings = None              #numpy array of embeddings corresponding to each image in dataset_paths
+        self.metrics = {                        #dictionary containing metrics (if config parameter metrics is 1)
+            "class": [],                        #name of positive class
+            "step": [],                         #iteration
+            "model_type": [],                   #type of model - SimCLR or SimSiam
+            "train_ratio": [],                  #ratio of negative to positive images used to train model in that iteration
+            "pos_train_img": [],                #number of positive images used to train model in that iteration
+            "neg_train_imgs": [],               #number of negative images used to train model in that iteration
+            "train_time": [],                   #time to train model in that iteration (in minutes)
+            "labeled_pos": [],                  #number of positive images labeled so far
+            "labeled_neg": [],                  #number of negative images labeled so far
+            "f1_score": [],                     #f1 score obtained on the validation dataset
+            "precision": [],                    #precision obtained on the validation dataset
+            "accuracy": [],                     #accuracy score obtained on the validation dataset
+            "recall": [],                       #recall obtained on the validation dataset
+            "pos_class_confidence_0.8": [],     #positive class images that were predicted with a probability >=0.8
+            "pos_class_confidence_0.5": [],     #positive class images that were predicted with a probability >=0.5
+            "pos_class_confidence_median": [],  #median of predicted probabilities of positive class images
+            "neg_class_confidence_0.8": [],     #negative class images that were predicted with a probability >=0.8
+            "neg_class_confidence_0.5": [],     #negative class images that were predicted with a probability >=0.5
+            "neg_class_confidence_median": [],  #median of predicted probabilities of negative class images
+            "total_labeling_effort": [],        #pos_train_imgs + neg_train_imgs + pos_class_confidence_0.8 + neg_class_confidence_0.8
+            "actual_pos_imgs_0.8": [],          #pos_train_imgs + pos_class_confidence_0.8 + labeled_pos
+            "actual_pos_imgs_0.5": [],}         #pos_train_imgs + pos_class_confidence_0.5 + labeled_pos
+
+        self.prediction_prob = {}               #stores prediction probabilities for unlabeled images in each iteration
+
+        print("Load Config Parameters")         #stores config file parameters
         self.parameters= self.load_config(self.config_path)
 
         #set seed
-        # set seed
         random.seed(self.parameters["seed"])
         np.random.seed(self.parameters["seed"])
 
         # log settings
-        #log_file = os.path.join(self.parameters["runtime_path"],"active_labeler.log")
-        log_file = "active_labeler.log"
-        if self.parameters["verbose"] == 0:
+        log_file = "active_labeler.log"         #path to log file
+        if self.parameters["verbose"] == 0:     #writes logs to file if verbose = 0
             logging.basicConfig(
                 level=logging.DEBUG,
                 format='%(asctime)s - %(levelname)-8s - %(funcName)-15s - %(message)s',
@@ -84,7 +88,7 @@ class Pipeline:
                     logging.FileHandler(log_file, mode='a'),
                 ]
             )
-        else:
+        else:                                   #prints logs and writes logs to file if verbose = 1
             logging.basicConfig(
                 level=logging.DEBUG,
                 format='%(asctime)s - %(levelname)-8s - %(funcName)-15s - %(message)s',
@@ -95,10 +99,8 @@ class Pipeline:
                 ]
             )
 
-
-
-    # similiarity search class
     def get_annoy_tree(self, num_nodes, embeddings, num_trees, annoy_path):
+        """Index annoy tree and store .ann file at annoy_path. For more information on Annoy check https://github.com/spotify/annoy#how-does-it-work  """
         t = AnnoyIndex(num_nodes, "euclidean")
         for i in range(len(embeddings)):
             t.add_item(i, embeddings[i])
@@ -107,6 +109,7 @@ class Pipeline:
         print("Annoy file stored at ", annoy_path)
 
     def inference(self, image_path, model, model_type):
+        """Generates embedding for an image"""
         im = Image.open(image_path).convert("RGB")
         image = np.transpose(im, (2, 0, 1)).copy()
         if self.parameters["device"] == "cuda":
@@ -123,6 +126,7 @@ class Pipeline:
         model,
         emb
     ):
+        """Loads annoy tree from .ann file at annoy_path and gets nearest neighbour images in the form of their index numbers. For more information on Annoy check https://github.com/spotify/annoy#how-does-it-work  """
         # load dependencies
         u = AnnoyIndex(self.parameters["model"]["embedding_size"], "euclidean")
         u.load(self.parameters["annoy"]["annoy_path"])
@@ -138,6 +142,9 @@ class Pipeline:
     def generate_embeddings(
         self, image_size, embedding_size, model, dataset_imgs, model_type="model"
     ):
+        """Generates embedding for all images in dataset_imgs using model"""
+
+        print(f"\nGenerating embeddings")
         dataset_paths = [(self.parameters["data_path"] + "/Unlabeled/" + image_name) for image_name in dataset_imgs]
         t = transforms.Resize((image_size, image_size))
         if self.parameters["device"] == "cuda":
@@ -160,7 +167,7 @@ class Pipeline:
                     embedding = model.encoder(im)[-1]
                 embedding_matrix = torch.vstack((embedding_matrix, embedding))
         logging.info(f"Got embeddings. Embedding Shape: {embedding_matrix.shape}")
-        print(f"\nGot embeddings. Embedding Shape: {embedding_matrix.shape}")
+        print(f"Got embeddings. Embedding Shape: {embedding_matrix.shape}")
         return embedding_matrix.detach().cpu().numpy()
 
     def initialize_embeddings(
@@ -174,7 +181,7 @@ class Pipeline:
         annoy_path,
         model_type="model",
     ):
-        #generates emb and indexes annoy tree
+        """Generates embeddings and generates an annoy tree with the embeddings"""
         self.embeddings = self.generate_embeddings(
             image_size, embedding_size, model, dataset_paths, model_type
         )
@@ -185,6 +192,7 @@ class Pipeline:
     def search_similar(
         self, ref_imgs, n_closest, model,embs
     ):
+        """gets nearest neighbour images for each image in ref_imgs"""
         image_names = set()
         i=0
         for image_path in ref_imgs:
@@ -203,12 +211,12 @@ class Pipeline:
         self,
         imgs_to_label
     ):
-
+        """sends images for labeling"""
         logging.info("Deduplicate imgs_to_label and prepare for labeling")
         image_names = [image_path.split("/")[-1] for image_path in imgs_to_label]
         image_names = list(set(image_names))
         #remove from image_names if already labeled
-        for labled in self.labled_list:
+        for labled in self.labeled_list:
             if labled in image_names:
                 image_names.remove(labled)
 
@@ -223,13 +231,13 @@ class Pipeline:
             self.unlabeled_list.remove(
                 image_name
             )
-            self.labled_list.append(image_name)
+            self.labeled_list.append(image_name)
 
         logging.debug(f"images sent to labeling: {image_names}")
         self.swipe_label()
 
     def swipe_label(self):
-
+        """calls the swipe labeler to label images"""
         unlabeled_path = self.parameters["swipe_labeler"]["unlabeled_path"]
         labeled_path =  self.parameters["swipe_labeler"]["labeled_path"]
         positive_path = self.parameters["swipe_labeler"]["positive_path"]
@@ -268,18 +276,6 @@ class Pipeline:
             logging.debug(f"swipe labeler exit code {ossys}")
 
 
-            # label = f"nohup python3 {swipe_dir} --path_for_unlabeled='{unlabeled_path}' --path_for_pos_labels='{positive_path}' --path_for_neg_labels='{negative_path}' --path_for_unsure_labels='{unsure_path}' --batch_size={batch_size} > swipelog.txt &"
-            # # >/dev/null 2>&1"
-            # logging.debug(label)
-            # ossys = os.system(label)
-            # print("swipe labeler exit code", ossys)
-            # if self.parameters['colab']:
-            #     get_ipython().getoutput('lt --port 5000')
-            # else:
-            #     os.system('lt --port 5000')
-
-
-
         print(
             f" {len(list(paths.list_images(labeled_path))) - ori_labled} labeled: {len(list(paths.list_images(positive_path))) - ori_pos} Pos {len(list(paths.list_images(negative_path))) - ori_neg} Neg"
         )
@@ -288,19 +284,21 @@ class Pipeline:
             f"{len(list(paths.list_images(labeled_path)))} labeled: {len(list(paths.list_images(positive_path)))} Pos {len(list(paths.list_images(negative_path)))} Neg"
         )
         logging.info(f"unlabeled list: {self.unlabeled_list}")
-        logging.info(f"labeled list: {self.labled_list}")
+        logging.info(f"labeled list: {self.labeled_list}")
 
     def create_seed_dataset(
         self,
         model
     ):
+        """Iteratively curates a seed dataset."""
         iteration = 0
         n_closest = 1
         while True:
             iteration += 1
             print(f"\n----- iteration: {iteration}")
 
-            print("Enter n closest, 0 to stop")
+            msg = "Enter number of nearest neighbour imgs for reference image" if iteration == 1 else "Enter number of nearest neighbour imgs per postive labeled image or 0 to quit"
+            print(msg)
             n_closest = int(input())
             if n_closest == 0:
                 break
@@ -308,7 +306,7 @@ class Pipeline:
             ref_imgs = (
                 [self.parameters["seed_dataset"]["ref_img_path"]] if iteration == 1 else list(paths.list_images(self.parameters["swipe_labeler"]["positive_path"]))
             )
-            embs = [None] if iteration == 1 else self.find_emb(ref_imgs)
+            embs = [None] if iteration == 1 else self.create_emb_list(ref_imgs)
             imgs = self.search_similar(
                 ref_imgs,
                 (n_closest * 8) // 10,
@@ -326,18 +324,15 @@ class Pipeline:
                 imgs,
             )
 
-    def find_emb(self, ref_imgs):
-        emb_ind = [self.dataset_paths.index(img_path.split('/')[-1]) for img_path in ref_imgs]
-        embs = [self.embeddings[i] for i in emb_ind]
-        return embs
-
 
     def load_config(self, config_path):
+        """" Loads the config file into a dictionary. """
         with open(config_path) as file:
             config = yaml.safe_load(file)
         return config
 
-    def load_model(self, model_type, model_path, data_path):  # , device):
+    def load_model(self, model_type, model_path, data_path):
+        """" Loads the SimCLR or SimSiam model. """
         if model_type == "simclr":
             model = SIMCLR.SIMCLR.load_from_checkpoint(model_path, DATA_PATH=data_path)
             logging.info("simclr model loaded")
@@ -353,7 +348,7 @@ class Pipeline:
         return model
 
     def create_emb_label_mapping(self, positive_path, negative_path):
-        # emb_dataset = [[emb,label]..] 0-neg, 1 -pos
+        """" Creates a mapping between the embedding and the label for each image in the format: emb_dataset = [[emb,label],[emb,label],..] where label = 0 is neg, label = 1 is pos. """
         emb_dataset = []
         if positive_path is None:
             pos_label = []
@@ -379,19 +374,14 @@ class Pipeline:
         return emb_dataset
 
     def create_emb_list(self, img_names):
-        # creates list of emb corresponding to img_names list
+        """" Creates a list of embeddings corresponding to each image in list img_names. """
         emb_dataset = []
         for img in img_names:
             emb_dataset.append(self.embeddings[self.dataset_paths.index(img.split("/")[-1])])
         return emb_dataset
 
     def test_data(self, model, loader, device="cuda"):
-        #def test_data(self, model, test_path, t, device="cuda"):
-
-        # test_dataset = torchvision.datasets.ImageFolder(test_path, t)
-        # loader = DataLoader(test_dataset, batch_size=1)
-
-        # model.to(device)
+        """" Obtain metrics on loader (validation dataset). """
         model.eval()
         op = []
         gt = []
@@ -422,10 +412,10 @@ class Pipeline:
             self.metrics["accuracy"].append(acc)
 
     def main(self):
-        # offline
-        # TODO printing and logging
+        """Uses Nearest Neighbour Search to curate the seed dataset and then calls on the ActiveLabeler and TrainModels class to label images using Active Learning strategies."""
 
-        # runtime folder sub directories - contains all runtime content
+        #creating runtime folder structure
+        # runtime folder has sub directories that contain all runtime content
         self.parameters["swipe_labeler"]={}
         self.parameters["swipe_labeler"]["labeled_path"] = os.path.join(self.parameters["runtime_path"],
                                                                         "swipe/labeled")
@@ -465,11 +455,6 @@ class Pipeline:
                   os.path.join(self.parameters["ActiveLabeler"]["final_dataset_path"], "negative"),]:
             pathlib.Path(i).mkdir(parents=True, exist_ok=True)
 
-        # +++++++++++++++++++++++++++++++++++++++++++++++++++++
-        # seed dataset
-
-
-
         logging.info("load model")
         model = self.load_model(
             self.parameters["model"]["model_type"],
@@ -477,6 +462,7 @@ class Pipeline:
             self.parameters["data_path"],
         )
 
+        #updating unlabeled_list and dataset_paths with the image names
         tmp = list(paths.list_images(self.parameters["data_path"]))
         self.unlabeled_list = [i.split("/")[-1] for i in tmp]
         self.dataset_paths = [i.split("/")[-1] for i in tmp]
@@ -492,22 +478,28 @@ class Pipeline:
             self.parameters["annoy"]["annoy_path"],
         )
 
+        # +++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+        # Seed Dataset Curation - Nearest Neighbour Search
         if self.parameters["seed_dataset"]["seed_nn"] == 1:
+            print("\n\nSeed Dataset Curation - Nearest Neighbour Search ")
             logging.info("create_seed_dataset")
-            self.labled_list = []
+            self.labeled_list = []
             self.create_seed_dataset(
                 model,
             )
+            print("Seed Dataset Curated - Nearest Neighbour Search Done")
             newly_labled_path = self.parameters["swipe_labeler"]["labeled_path"]
 
+        # Seed dataset already present, labeled and unlabeled lists are updated.
         else:
-            self.labled_list = [
+            self.labeled_list = [
                 i.split("/")[-1]
                 for i in list(
                     paths.list_images(self.parameters["seed_dataset"]["seed_data_path"])
                 )
             ]
-            for i in self.labled_list:
+            for i in self.labeled_list:
                 self.unlabeled_list.remove(i)
             newly_labled_path = self.parameters["seed_dataset"]["seed_data_path"]
 
@@ -518,7 +510,6 @@ class Pipeline:
         logging.info(
             "Initializing active labeler and train models class objects."
         )
-        #note: whatever unlabled images left has to be updated when not using diversity and using entire dataset
         #pass emb mapping, unlabled images paths
         activelabeler = ActiveLabeler(
             self.create_emb_list(self.unlabeled_list),
@@ -555,12 +546,16 @@ class Pipeline:
 
         iteration = 0
         model_type = "model"
+        print(
+            f"\nActive Learning - Strategy: {self.parameters['ActiveLabeler']['sampling_strategy']}"
+        )
         while True:
             iteration += 1
-            print(f"iteration {iteration}")
+
+            print(f"\n----- iteration: {iteration}")
 
             print(
-                "Enter l for Linear, f for finetuning and q to quit"
+                "Enter: l for Linear | f for Finetuning | q to quit"
             )
 
             input_counter = input()
@@ -727,7 +722,7 @@ class Pipeline:
 
             #nn and label
             if self.parameters["ActiveLabeler"]["sampling_nn"] == 1:
-                embs = self.find_emb(strategy_images)
+                embs = self.create_emb_list(strategy_images)
                 imgs = self.search_similar(
                     strategy_images,
                     int(self.parameters["ActiveLabeler"]["n_closest"]),
@@ -771,8 +766,8 @@ class Pipeline:
                 f"Total Images: {tmp1} + {tmp2} = {tmp1+tmp2} positive || {tmp3} + {tmp4} = {tmp3+tmp4} negative"
             )
             if self.parameters['test']['metrics']:
-                self.metrics["labled_pos"].append(tmp2)
-                self.metrics["labled_neg"].append(tmp4)
+                self.metrics["labeled_pos"].append(tmp2)
+                self.metrics["labeled_neg"].append(tmp4)
 
 
             #get model predictions and corresponding imgs
@@ -837,12 +832,12 @@ class Pipeline:
                 self.metrics["actual_pos_imgs_0.8"].append(
                     self.metrics["pos_train_img"][-1]
                     + self.metrics["pos_class_confidence_0.8"][-1]
-                    + self.metrics["labled_pos"][-1]
+                    + self.metrics["labeled_pos"][-1]
                 )
                 self.metrics["actual_pos_imgs_0.5"].append(
                     self.metrics["pos_train_img"][-1]
                     + self.metrics["pos_class_confidence_0.5"][-1]
-                    + self.metrics["labled_pos"][-1]
+                    + self.metrics["labeled_pos"][-1]
                 )
                 self.metrics["total_labeling_effort"].append(
                     self.metrics["pos_train_img"][-1]
@@ -874,8 +869,11 @@ class Pipeline:
                     df[i] = df[i].astype(float).round(2)
                 df.to_csv(self.parameters["test"]["metric_csv_path"], index=False)
 
+        print("\n\nDataset Curated")
+
         # save final model
         train_models.save_model()
+        print(f"Final Model Saved at {'./final_model.ckpt'}")
 
         #saving final dataset based on predictions
         unlabeled_predictions, img_paths = activelabeler.get_prob()
@@ -891,5 +889,23 @@ class Pipeline:
                 target = os.path.join(neg_path, img_paths[i].split("/")[-1])
                 shutil.copy(img_paths[i], target)
 
+
+        # put newly labeled data in archive path and clear newly labeled
+        for img in list(paths.list_images(newly_labled_path + "/positive")):
+            shutil.copy(img, self.parameters["ActiveLabeler"]["archive_path"] + "/positive")
+            os.remove(img)
+        for img in list(paths.list_images(newly_labled_path + "/negative")):
+            shutil.copy(img, self.parameters["ActiveLabeler"]["archive_path"] + "/negative")
+            os.remove(img)
+
+        # copy archive folder to final dataset
+        for img in list(paths.list_images(self.parameters["ActiveLabeler"]["archive_path"] + "/positive")):
+            shutil.copy(img,pos_path)
+        for img in list(paths.list_images(self.parameters["ActiveLabeler"]["archive_path"] + "/negative")):
+            shutil.copy(img,neg_path)
+
+        print(f"Final Dataset Saved at {self.parameters['ActiveLabeler']['final_dataset_path']} - with pos imgs {len(list(paths.list_images(pos_path)))}, neg imgs {len(list(paths.list_images(neg_path)))}")
         logging.info( f"final dataset - pos imgs - {len(list(paths.list_images(pos_path)))}" )
         logging.info( f"final dataset - neg imgs - {len(list(paths.list_images(neg_path)))}" )
+
+
