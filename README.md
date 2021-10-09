@@ -1,6 +1,5 @@
-<img src="https://github.com/spaceml-org/Active-Labeler/blob/main/readme_banner.png" >
-
 <div align="center">
+  <img src="https://github.com/spaceml-org/Active-Labeler/blob/main/active-simple-header.jpg" >
 <p align="center">
   Published by <a href="http://spaceml.org/">SpaceML</a> •
   <a href="https://arxiv.org/abs/2012.10610">About SpaceML</a>
