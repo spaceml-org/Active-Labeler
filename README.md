@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="https://github.com/spaceml-org/Active-Labeler/blob/main/active-simple-header.jpg" >
+  <img src="https://github.com/spaceml-org/Active-Labeler/blob/review-master/active-simple-header.jpg" >
 <p align="center">
   Published by <a href="http://spaceml.org/">SpaceML</a> •
   <a href="https://arxiv.org/abs/2012.10610">About SpaceML</a>
@@ -28,7 +28,7 @@ Some of the strategies present in this tool includes:
     * Gaussian function is used to pick examples based on their predictions and a gaussian curve. 
 
 <br>
-<img src="https://github.com/spaceml-org/Active-Labeler/blob/main/ActiveLabeler_diagram.jpeg" >
+<img src="https://github.com/spaceml-org/Active-Labeler/blob/review-master/ActiveLabeler_diagram.jpeg" >
 
 ## Swipe Labeler:
 [Swipe Labeler](https://github.com/spaceml-org/Swipe-Labeler) is a GUI based tool to enable labeling of data.
