@@ -1,0 +1,39 @@
+verbose:            0
+seed:               100
+device:             cuda
+data_path:          /content/Dataset
+runtime_path:       /content/runtime
+swipe_label_batch_size:         10
+
+model:
+  model_type:       simclr
+  model_path:       /content/models/SIMCLR_ssl.ckpt
+  image_size:       256
+  embedding_size:   32
+  model_config_path:     /content/Active-Labeler/model_config.yaml
+
+seed_dataset:
+ seed_nn:           1
+ ref_img_path:      /content/UCMerced_LandUse/Images/airplane/airplane01.jpg
+ seed_data_path:    /content/seed_dataset
+
+annoy:
+    num_trees:      50
+
+ActiveLabeler:
+  sample_size:      20
+  sampling_strategy: "gaussian"
+  active_label_batch_size: 128
+  sampling_nn:              0
+  n_closest:                5
+  train_dataset_batch_size: 32
+
+test:
+   metrics: 0
+   pos_class: airplane
+   metric_csv_path: /content/metrics.csv
+   prob_csv_path: /content/prob.csv
+   simulate_label: False
+
+
+
