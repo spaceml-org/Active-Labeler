@@ -16,12 +16,14 @@ def download_and_prepare():
     output = 'RESISC45.rar'
     if not os.path.isfile(download_path):
       gdown.download(url, output, quiet=False)
-    commands = [
-    "unrar x {}".format(download_path), 
-    "mv NWPU-RESISC45/ RESISC45/",
-    "rm {}".format(download_path)]
 
-    os.system( " && ".join(commands))
+    if not os.path.exists('RESISC45'):
+
+      commands = [
+      "unrar x {}".format(download_path),
+      "mv NWPU-RESISC45/ RESISC45/"]
+      # "rm {}".format(download_path)]
+      os.system( " && ".join(commands))
 
     folder = 'Dataset/Unlabelled'
     if os.path.exists(folder):
@@ -48,6 +50,7 @@ def resisc_annotate(image_paths, num_images, already_labelled, positive_class, l
       if num_labelled==num_images:
         break
     return already_labelled
+
   else:
     num_labelled = 0
     num_images_pos = num_images // 2
