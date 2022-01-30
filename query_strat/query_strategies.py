@@ -1,7 +1,7 @@
 import numpy as np
 from operator import itemgetter
 
-from query_utils import get_samples
+from query_strat.query_utils import get_samples
 
 def least_confidence(confidences, number):
     print("Using Least Confidence Strategy")
