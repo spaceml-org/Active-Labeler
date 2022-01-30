@@ -8,9 +8,9 @@ from tqdm import tqdm
 import gdown
 
 def download_and_prepare():
-    full_path = os.path.join(os.getcwd(), "RESISC45")
-    if os.path.exists(full_path):
-        shutil.rmtree(full_path)
+    # full_path = os.path.join(os.getcwd(), "RESISC45")
+    # if os.path.exists(full_path):
+    #     shutil.rmtree(full_path)
     download_path = os.path.join(os.getcwd(), "RESISC45.rar")
     url = 'https://drive.google.com/uc?id=14zEhqi9mczZaLEb33TQuKbhmurn2ClGL&export=download'
     output = 'RESISC45.rar'
@@ -18,7 +18,6 @@ def download_and_prepare():
       gdown.download(url, output, quiet=False)
 
     if not os.path.exists('RESISC45'):
-
       commands = [
       "unrar x {}".format(download_path),
       "mv NWPU-RESISC45/ RESISC45/"]
