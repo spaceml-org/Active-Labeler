@@ -23,7 +23,7 @@ def download_and_prepare():
 
     os.system( " && ".join(commands))
 
-    folder = 'Dataset/Unlabeled'
+    folder = 'Dataset/Unlabelled'
     if os.path.exists(folder):
         shutil.rmtree(folder)
 
