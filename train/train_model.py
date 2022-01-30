@@ -97,7 +97,7 @@ def train_model_vanilla(model, train_datapath, eval_dataset, val_dataset, **trai
                           transforms.Resize((224,224)),
                           transforms.RandomHorizontalFlip(p=0.5),
                           transforms.RandomRotation(15),
-                          transforms.RandomCrop(204),
+                          transforms.RandomCrop(224),
                           transforms.ToTensor(),
                           transforms.Normalize((0, 0, 0),(1, 1, 1))
   ])

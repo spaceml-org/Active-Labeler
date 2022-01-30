@@ -24,9 +24,10 @@ def load_opt_loss(model, train_config):
     """Fetches optimiser and loss fn params from config and loads"""
     opt_params = train_config['optimizer']
     loss_params = train_config['loss_fn']
+    loss_kwargs = {k:loss_params[k] for k in loss_params if k!='name'}
     optimizer = getattr(optim, opt_params['name'])(
                 model.parameters(), **opt_params.get('config', {}))
-    loss_fn = getattr(nn, loss_params['name'])
+    loss_fn = getattr(nn, loss_params['name'])(**loss_kwargs)
 
     return optimizer, loss_fn
 
