@@ -5,7 +5,7 @@ from imutils import paths
 from random import shuffle
 import subprocess
 from tqdm import tqdm
-import gdown 
+import gdown
 
 def download_and_prepare():
     full_path = os.path.join(os.getcwd(), "RESISC45")
