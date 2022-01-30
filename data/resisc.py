@@ -8,7 +8,7 @@ from tqdm import tqdm
 import gdown
 
 def download_and_prepare():
-    # full_path = os.path.join(os.getcwd(), "RESISC45")
+    full_path = os.path.join(os.getcwd(), "RESISC45")
     # if os.path.exists(full_path):
     #     shutil.rmtree(full_path)
     download_path = os.path.join(os.getcwd(), "RESISC45.rar")
