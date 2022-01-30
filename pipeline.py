@@ -67,7 +67,7 @@ class Pipeline:
                                 opt = self.optim, 
                                 loss_fn = self.loss, 
                                 batch_size = train_config['batch_size'],
-                                epochs = train_config['epochs'])
+                                )
 
             al_kwargs = dict(already_labelled = self.already_labelled, 
                             eval_dataset = eval_dataset, 
