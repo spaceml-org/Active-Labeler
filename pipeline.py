@@ -73,20 +73,29 @@ class Pipeline:
                             eval_dataset = eval_dataset, 
                             val_dataset=  val_dataset, 
                             strategy = None,
+                            positive_class = positive_class
                             )
             
+            
+            logs = train_al(self.model, self.already_labelled, unlabelled_images, train_kwargs, **al_kwargs)
 
-    def train_al(self, model, num_iters, already_labelled, 
-                positive_class, train_kwargs, **al_kwargs):
-        
+    def train_al(self, model, already_labelled, unlabelled_images, train_kwargs, **al_kwargs):
+        iter = 0
         eval_dataset = al_kwargs['eval_dataset']
         val_dataset = al_kwargs['val_dataset']
+        num_iters = al_kwargs['num_iters']
+        positive_class = al_kwargs['positive_class']
+        
+        logs = {'ckpt_path' : [],
+                'graph_logs': []}
 
-        while num_iters < 30:
-            print(f'-------------------{num_iters +1}----------------------')
-            num_iters+=1
+        while iter < num_iters:
+            print(f'-------------------{iter +1}----------------------')
+            iter+=1
             ckpt_path, graph_logs = train_model_vanilla(self.model, GConst.LABELLED_DIR, eval_dataset, val_dataset, **train_kwargs)
-            low_confs = get_low_conf_unlabeled_batched(model)
+            logs['ckpt_path'].append(ckpt_path)
+            logs['graph_logs'].append(graph_logs)
+            low_confs = get_low_conf_unlabeled_batched(model, unlabelled_images **al_kwargs)
             print("Images selected from: ",len(low_confs))
             for image in low_confs:
                 if image not in already_labelled:
@@ -95,7 +104,9 @@ class Pipeline:
                     shutil.copy(image, os.path.join(GConst.LABELLED_DIR,'positive',image.split('/')[-1]))
                 else:
                     shutil.copy(image, os.path.join(GConst.LABELLED_DIR,'negative',image.split('/')[-1]))
-            print("Total Labeled Data: Positive {} Negative {}".format(len(list(paths.list_images('/content/Dataset/Labelled/positive'))),len(list(paths.list_images('/content/Dataset/Labelled/negative')))))
+            print("Total Labeled Data: Positive {} Negative {}".format(len(list(paths.list_images(os.path.join(GConst.LABELLED_DIR, 'positive')))),len(list(paths.list_images(os.path.join(GConst.LABELLED_DIR, 'negative'))))))
+
+        return logs
 
 
 

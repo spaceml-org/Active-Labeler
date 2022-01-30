@@ -8,7 +8,14 @@ import torch
 from data.custom_datasets import AL_Dataset
 import query_strategies
 
-def get_low_conf_unlabeled_batched(model, image_paths, already_labelled, strategy, num_labelled=50, limit=-1):
+def get_low_conf_unlabeled_batched(model, image_paths, **al_kwargs):
+
+  
+  strategy = al_kwargs['strategy']
+  already_labelled = al_kwargs['already_labelled']
+  num_labelled = al_kwargs['num_labelled']
+  limit = al_kwargs['limit']
+
   confidences =  []
   unlabeled_imgs = [os.path.expanduser(img) for img in image_paths if img not in already_labelled]
   t = transforms.Compose([
