@@ -53,7 +53,7 @@ class Pipeline:
             resisc.download_and_prepare()
             #Initialising data by annotating labelled and eval
             unlabelled_images = list(paths.list_images(GConst.UNLABELLED_DIR))
-            self.already_labelled = resisc.resisc_annotate(unlabelled_images, 100, self.already_labelled, positive_class, labelled_dir=GConst.EVAL_DIR) 
+            self.already_labelled = resisc.resisc_annotate(unlabelled_images, 100, self.already_labelled, positive_class, labelled_dir=GConst.EVAL_DIR, val =True) 
             self.already_labelled = resisc.resisc_annotate(unlabelled_images, 50, self.already_labelled, positive_class, labelled_dir=GConst.LABELLED_DIR)
             print("Total Eval Data: Positive {} Negative {}".format(len(list(paths.list_images(os.path.join(GConst.EVAL_DIR, 'positive')))),len(list(paths.list_images(os.path.join(GConst.EVAL_DIR, 'negative'))))))
             print("Total Labeled Data: Positive {} Negative {}".format(len(list(paths.list_images(os.path.join(GConst.LABELLED_DIR, 'positive')))),len(list(paths.list_images(os.path.join(GConst.LABELLED_DIR, 'negative'))))))

@@ -33,21 +33,40 @@ def download_and_prepare():
     print('Downloaded and prepared RESISC-45')
 
 
-def resisc_annotate(image_paths, num_images, already_labelled, positive_class, labelled_dir="Dataset/Labeled"):
-  num_labelled = 0
-  shuffle(image_paths)
-  for image in image_paths:
-    if image not in already_labelled:
-      num_labelled += 1
-      already_labelled.append(image)
-      if image.split('/')[-1].split('_')[0] == positive_class:
-        shutil.copy(image, os.path.join(labelled_dir,'positive',image.split('/')[-1]))
-      else:
-        shutil.copy(image, os.path.join(labelled_dir,'negative',image.split('/')[-1]))
-    if num_labelled==num_images:
-      break
-  return already_labelled
-
+def resisc_annotate(image_paths, num_images, already_labelled, positive_class, labelled_dir="Dataset/Labeled", val = False):
+  if not val:
+    num_labelled = 0
+    shuffle(image_paths)
+    for image in image_paths:
+      if image not in already_labelled:
+        num_labelled += 1
+        already_labelled.append(image)
+        if image.split('/')[-1].split('_')[0] == positive_class:
+          shutil.copy(image, os.path.join(labelled_dir,'positive',image.split('/')[-1]))
+        else:
+          shutil.copy(image, os.path.join(labelled_dir,'negative',image.split('/')[-1]))
+      if num_labelled==num_images:
+        break
+    return already_labelled
+  else:
+    num_labelled = 0
+    num_images_pos = num_images // 2
+    all_pos_images = [image for image in image_paths if image.split('/')[-1].split('_')[0] == positive_class]
+    all_neg_images = [image for image in image_paths if not image.split('/')[-1].split('_')[0] == positive_class]
+    shuffle(all_pos_images)
+    pos_images = [all_pos_images[i] for i in range(len(num_images_pos))]
+    neg_images = [all_neg_images[i] for i in range(len(num_images_pos))]
+    for image in pos_images + neg_images:
+      if image not in already_labelled:
+        num_labelled += 1
+        already_labelled.append(image)
+        if image.split('/')[-1].split('_')[0] == positive_class:
+          shutil.copy(image, os.path.join(labelled_dir,'positive',image.split('/')[-1]))
+        else:
+          shutil.copy(image, os.path.join(labelled_dir,'negative',image.split('/')[-1]))
+      if num_labelled==num_images:
+        break
+    return already_labelled
 
 
 
