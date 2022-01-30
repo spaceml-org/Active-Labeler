@@ -146,7 +146,7 @@ def train_model_vanilla(model, train_datapath, eval_dataset, val_dataset, **trai
     avg_loss = np.mean(epoch_loss)
     avg_fscore = np.mean(epoch_f1)
 
-    val_fscore, val_acc, val_loss = val_model_vanilla(model, val_dataset)
+    val_fscore, val_acc, val_loss = val_model_vanilla(model, val_dataset, loss_fn)
     print('{:<10d}{:>4.2f}{:>13.2f}{:>13.2f}{:>13.2f}{:>13.2f}{:>13.2f}'.format(epoch, avg_loss, avg_acc, avg_fscore, val_loss, val_acc, val_fscore))
 
     print("Validation F1 Score: ",val_fscore,"Total Data Used :",len(list(paths.list_images(GConst.LABELLED_DIR))))
@@ -163,7 +163,7 @@ def train_model_vanilla(model, train_datapath, eval_dataset, val_dataset, **trai
   torch.save(model.state_dict(), model_path)
   
   print("Since our model has become confident enough, testing on leftover unlabeled data")
-  evaluate_al(model, eval_dataset)
+  evaluate_al(model, eval_dataset, loss_fn)
 
   return model_path, graph_logs
 
