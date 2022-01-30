@@ -56,6 +56,7 @@ def resisc_annotate(image_paths, num_images, already_labelled, positive_class, l
     shuffle(all_pos_images)
     pos_images = [all_pos_images[i] for i in range(len(num_images_pos))]
     neg_images = [all_neg_images[i] for i in range(len(num_images_pos))]
+        
     for image in pos_images + neg_images:
       if image not in already_labelled:
         num_labelled += 1
