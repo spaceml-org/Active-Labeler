@@ -20,7 +20,7 @@ def load_model(model, model_path = None, device = 'cuda', **model_kwargs):
         model.load_state_dict(torch.load(model_path))
     return model
 
-def load_opt_loss(train_config, model):
+def load_opt_loss(model, train_config):
     """Fetches optimiser and loss fn params from config and loads"""
     opt_params = train_config['optimizer']
     loss_params = train_config['loss_fn']
