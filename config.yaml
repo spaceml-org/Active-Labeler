@@ -17,7 +17,7 @@ train:
 active_learner:
   iterations : 30
   strategy : uncertainty
-  num_query : 50
+  num_labelled : 50
   
 
 

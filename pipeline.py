@@ -68,12 +68,14 @@ class Pipeline:
                                 loss_fn = self.loss, 
                                 batch_size = train_config['batch_size'],
                                 )
-
+            al_config = config['active_learner']
             al_kwargs = dict(
                             eval_dataset = eval_dataset, 
                             val_dataset=  val_dataset, 
-                            strategy = None,
-                            positive_class = positive_class
+                            strategy = al_config['strategy'],
+                            positive_class = positive_class,
+                            num_iters = al_config['iterations'],
+                            num_labelled = al_config['num_labelled']
                             )
             
             
