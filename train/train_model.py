@@ -92,7 +92,7 @@ def train_model_vanilla(model, train_datapath, eval_dataset, val_dataset, **trai
   batch_size = train_kwargs['batch_size']
   opt = train_kwargs['opt']
   loss_fn = train_kwargs['loss_fn']
-
+  
   t = transforms.Compose([
                           transforms.Resize((224,224)),
                           transforms.RandomHorizontalFlip(p=0.5),
