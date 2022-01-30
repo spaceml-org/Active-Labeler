@@ -6,7 +6,7 @@ from operator import itemgetter
 import torch
 
 from data.custom_datasets import AL_Dataset
-import query_strategies
+import query_strat.query_strategies as query_strategies
 
 def get_low_conf_unlabeled_batched(model, image_paths, **al_kwargs):
 
