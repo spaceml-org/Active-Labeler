@@ -77,7 +77,7 @@ class Pipeline:
                             )
             
             
-            logs = train_al(self.model, self.already_labelled, unlabelled_images, train_kwargs, **al_kwargs)
+            logs = self.train_al(self.model, self.already_labelled, unlabelled_images, train_kwargs, **al_kwargs)
 
     def train_al(self, model, already_labelled, unlabelled_images, train_kwargs, **al_kwargs):
         iter = 0

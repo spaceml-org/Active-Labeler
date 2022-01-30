@@ -92,7 +92,7 @@ def train_model_vanilla(model, train_datapath, eval_dataset, val_dataset, **trai
   batch_size = train_kwargs['batch_size']
   opt = train_kwargs['opt']
   loss_fn = train_kwargs['loss_fn']
-  
+
   t = transforms.Compose([
                           transforms.Resize((224,224)),
                           transforms.RandomHorizontalFlip(p=0.5),
@@ -147,24 +147,42 @@ def train_model_vanilla(model, train_datapath, eval_dataset, val_dataset, **trai
 
     val_fscore, val_acc, val_loss = val_model_vanilla(model, val_dataset)
     print('{:<10d}{:>4.2f}{:>13.2f}{:>13.2f}{:>13.2f}{:>13.2f}{:>13.2f}'.format(epoch, avg_loss, avg_acc, avg_fscore, val_loss, val_acc, val_fscore))
-  
-  
-  #logging the final epoch's val f1 score into the graph logs
-  print("Validation F1 Score: ",val_fscore,"Total Data Used :",len(list(paths.list_images(GConst.LABELLED_DIR))))
+
+    print("Validation F1 Score: ",val_fscore,"Total Data Used :",len(list(paths.list_images(GConst.LABELLED_DIR))))
   graph_logs['val_f1'].append(val_fscore)
   graph_logs['len_data'].append(len(list(paths.list_images(GConst.LABELLED_DIR))))
   
   fscore = 0.0
   auc = 0.0
-  timestamp = re.sub('\.[0-9]*','_',str(datetime.datetime.now())).replace(" ", "_").replace("-", "").replace(":","")
   
+  timestamp = re.sub('\.[0-9]*','_',str(datetime.datetime.now())).replace(" ", "_").replace("-", "").replace(":","")
   training_size = str(len(train_imgs))
   accuracies = str(fscore)+"_"+str(auc)
-  model_path = "checkpoints/"+timestamp+accuracies+ "_" + training_size+".params"
+  model_path = "checkpoints/"+timestamp+ accuracies+ "_" + training_size+".params"
   torch.save(model.state_dict(), model_path)
+  
   print("Since our model has become confident enough, testing on leftover unlabeled data")
-  evaluate_al(model, eval_dataset)  
-  # evaluate_al(model.to('cuda'),batched_unlabeled_dir,True)
-  # evaluate_al(model.to('cuda'),eval_datapath,True)
+  evaluate_al(model, eval_dataset)
+
   return model_path, graph_logs
+
+
+  # #logging the final epoch's val f1 score into the graph logs
+  # print("Validation F1 Score: ",val_fscore,"Total Data Used :",len(list(paths.list_images(GConst.LABELLED_DIR))))
+  # graph_logs['val_f1'].append(val_fscore)
+  # graph_logs['len_data'].append(len(list(paths.list_images(GConst.LABELLED_DIR))))
+  
+  # fscore = 0.0
+  # auc = 0.0
+  # timestamp = re.sub('\.[0-9]*','_',str(datetime.datetime.now())).replace(" ", "_").replace("-", "").replace(":","")
+  
+  # training_size = str(len(train_imgs))
+  # accuracies = str(fscore)+"_"+str(auc)
+  # model_path = "checkpoints/"+timestamp+accuracies+ "_" + training_size+".params"
+  # torch.save(model.state_dict(), model_path)
+  # print("Since our model has become confident enough, testing on leftover unlabeled data")
+  # evaluate_al(model, eval_dataset)  
+  # # evaluate_al(model.to('cuda'),batched_unlabeled_dir,True)
+  # # evaluate_al(model.to('cuda'),eval_datapath,True)
+  # return model_path, graph_logs
   
