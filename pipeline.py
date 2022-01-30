@@ -50,7 +50,7 @@ class Pipeline:
         config = self.config
         if config['data']['dataset'] == 'resisc':
             positive_class = config['data']['positive_class']
-            resisc.resisc_download_and_prepare()
+            resisc.download_and_prepare()
             #Initialising data by annotating labelled and eval
             unlabelled_images = list(paths.list_images(GConst.UNLABELLED_DIR))
             self.already_labelled = resisc.resisc_annotate(unlabelled_images, 100, self.already_labelled, positive_class, labelled_dir=GConst.EVAL_DIR) 
