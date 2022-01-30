@@ -1,0 +1,24 @@
+model: 
+  model : Rnet
+  model_path : null
+  device  : cuda
+data:
+  dataset : resisc
+  positive_class : deserts
+train:
+  optimizer : 
+    name : SGD
+    config : 
+      lr : 0.01
+  loss_fn : 
+    name : BCELoss
+  batch_size : 64
+  epochs : 5
+active_learner:
+  iterations : 30
+  strategy : uncertainty
+  num_query : 50
+  
+
+
+
