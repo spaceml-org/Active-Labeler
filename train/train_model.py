@@ -88,7 +88,7 @@ def val_model_vanilla(model, eval_dataset, loss_fn):
 
 def train_model_vanilla(model, train_datapath, eval_dataset, val_dataset, **train_kwargs):
 
-  num_epochs = train_kwargs['epoch']
+  num_epochs = train_kwargs['epochs']
   batch_size = train_kwargs['batch_size']
   opt = train_kwargs['opt']
   loss_fn = train_kwargs['loss_fn']
