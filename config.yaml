@@ -4,7 +4,7 @@ model:
   device  : cuda
 data:
   dataset : resisc
-  positive_class : deserts
+  positive_class : airplane
 train:
   optimizer : 
     name : SGD
