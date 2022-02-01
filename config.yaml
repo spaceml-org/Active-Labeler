@@ -18,6 +18,7 @@ active_learner:
   iterations : 30
   strategy : uncertainty
   num_labelled : 50
+  limit : -1
   
 
 

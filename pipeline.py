@@ -75,7 +75,8 @@ class Pipeline:
                             strategy = al_config['strategy'],
                             positive_class = positive_class,
                             num_iters = al_config['iterations'],
-                            num_labelled = al_config['num_labelled']
+                            num_labelled = al_config['num_labelled'],
+                            limit  = al_config['limit']
                             )
             
             
