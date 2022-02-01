@@ -8,11 +8,10 @@ import torch
 from data.custom_datasets import AL_Dataset
 import query_strat.query_strategies as query_strategies
 
-def get_low_conf_unlabeled_batched(model, image_paths, **al_kwargs):
+def get_low_conf_unlabeled_batched(model, image_paths, already_labelled, **al_kwargs):
 
   
   strategy = al_kwargs['strategy']
-  already_labelled = al_kwargs['already_labelled']
   num_labelled = al_kwargs['num_labelled']
   limit = al_kwargs['limit']
 
