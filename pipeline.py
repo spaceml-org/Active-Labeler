@@ -97,7 +97,7 @@ class Pipeline:
             ckpt_path, graph_logs = train_model_vanilla(self.model, GConst.LABELLED_DIR, eval_dataset, val_dataset, **train_kwargs)
             logs['ckpt_path'].append(ckpt_path)
             logs['graph_logs'].append(graph_logs)
-            low_confs = get_low_conf_unlabeled_batched(model, unlabelled_images **al_kwargs)
+            low_confs = get_low_conf_unlabeled_batched(model, unlabelled_images, **al_kwargs)
             print("Images selected from: ",len(low_confs))
             for image in low_confs:
                 if image not in already_labelled:
