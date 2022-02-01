@@ -124,7 +124,6 @@ def train_model_vanilla(model, train_datapath, eval_dataset, val_dataset, **trai
     epoch_f1 = []
 
     for _, data in enumerate(trainloader):
-        breakpoint()
         inputs, labels = data
         labels = labels.reshape((labels.shape[0], 1))
         labels = labels.to(torch.float32)

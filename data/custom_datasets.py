@@ -45,7 +45,7 @@ class RESISC_Eval(Dataset):
         return len(self.images)
 
     def __getitem__(self, index):
-        img_path = self.unlabeled_imgs[index]
+        img_path = self.images[index]
         img = Image.open(img_path).convert('RGB')
         if self.transform:
             img = self.transform(img)
