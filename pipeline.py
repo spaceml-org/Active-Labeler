@@ -3,6 +3,7 @@ import gc
 import os 
 import imutils
 from random import shuffle 
+import pandas as pd
 from imutils import paths 
 import matplotlib.pyplot as plt
 from PIL import Image
@@ -78,11 +79,17 @@ class Pipeline:
                             num_labelled = al_config['num_labelled'],
                             limit  = al_config['limit']
                             )
+            logs = self.train_al_resisc(self.model, self.already_labelled, unlabelled_images, train_kwargs, **al_kwargs)
+        
+        elif config['data']['dataset'] == 'csv':
+            self.df = pd.read_csv(config['data']['csv_path'])
             
-            
-            logs = self.train_al(self.model, self.already_labelled, unlabelled_images, train_kwargs, **al_kwargs)
 
-    def train_al(self, model, already_labelled, unlabelled_images, train_kwargs, **al_kwargs):
+            
+            
+
+
+    def train_al_resisc(self, model, already_labelled, unlabelled_images, train_kwargs, **al_kwargs):
         iter = 0
         eval_dataset = al_kwargs['eval_dataset']
         val_dataset = al_kwargs['val_dataset']
