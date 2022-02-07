@@ -23,7 +23,7 @@ from data.custom_datasets import AL_Dataset, RESISC_Eval
 import global_constants as GConst
 warnings.filterwarnings("ignore")
 
-from utils import (load_config, load_model, load_opt_loss, initialise_data_dir)
+from utils import (load_config, load_model, load_opt_loss, initialise_data_dir, annotate_data)
 from data import resisc
 from train.train_model import train_model_vanilla
 from query_strat.query import get_low_conf_unlabeled_batched
@@ -83,10 +83,10 @@ class Pipeline:
         
         elif config['data']['dataset'] == 'csv':
             self.df = pd.read_csv(config['data']['csv_path'])
-            
+            df = self.df.copy()
+            query_image = df[df['status'] == 'query']['image_paths'].values()
+            annotate_data(query_image, 'labelled')
 
-            
-            
 
 
     def train_al_resisc(self, model, already_labelled, unlabelled_images, train_kwargs, **al_kwargs):
