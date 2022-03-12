@@ -23,7 +23,7 @@ from data.custom_datasets import AL_Dataset, RESISC_Eval
 import global_constants as GConst
 warnings.filterwarnings("ignore")
 
-from utils import (load_config, load_model, load_opt_loss, initialise_data_dir, annotate_data)
+from utils import (load_config, load_model, load_opt_loss, initialise_data_dir, annotate_data, get_num_files)
 from data import resisc
 from train.train_model import train_model_vanilla
 from query_strat.query import get_low_conf_unlabeled_batched
@@ -56,8 +56,8 @@ class Pipeline:
             unlabelled_images = list(paths.list_images(GConst.UNLABELLED_DIR))
             self.already_labelled = resisc.resisc_annotate(unlabelled_images, 100, self.already_labelled, positive_class, labelled_dir=GConst.EVAL_DIR, val=True) 
             self.already_labelled = resisc.resisc_annotate(unlabelled_images, 50, self.already_labelled, positive_class, labelled_dir=GConst.LABELLED_DIR)
-            print("Total Eval Data: Positive {} Negative {}".format(len(list(paths.list_images(os.path.join(GConst.EVAL_DIR, 'positive')))),len(list(paths.list_images(os.path.join(GConst.EVAL_DIR, 'negative'))))))
-            print("Total Labeled Data: Positive {} Negative {}".format(len(list(paths.list_images(os.path.join(GConst.LABELLED_DIR, 'positive')))),len(list(paths.list_images(os.path.join(GConst.LABELLED_DIR, 'negative'))))))
+            print("Total Eval Data: Positive {} Negative {}".format(get_num_files("eval_pos"),get_num_files('eval_neg')))
+            print("Total Labeled Data: Positive {} Negative {}".format(get_num_files("positive"),get_num_files('negative')))
 
             #Train 
             eval_dataset = RESISC_Eval(GConst.UNLABELLED_DIR, positive_class)
@@ -65,10 +65,11 @@ class Pipeline:
 
             train_config = config['train']
             train_kwargs = dict(epochs = train_config['epochs'],
-                                opt = self.optim, 
+                                opt = self.optim,
                                 loss_fn = self.loss, 
                                 batch_size = train_config['batch_size'],
                                 )
+
             al_config = config['active_learner']
             al_kwargs = dict(
                             eval_dataset = eval_dataset, 
@@ -85,7 +86,56 @@ class Pipeline:
             self.df = pd.read_csv(config['data']['csv_path'])
             df = self.df.copy()
             query_image = df[df['status'] == 'query']['image_paths'].values()
-            annotate_data(query_image, 'labelled')
+            if len(query_image) > 1:
+                split_ratio = int(0.9 * len(query_image)) #TODO make this an arg
+                annotate_data(query_image[split_ratio:], 'eval_pos')
+                annotate_data(query_image[:split_ratio], 'positive')
+            else:
+                annotate_data(query_image, 'positive')
+            #swipe_labeler -> label random set of data -> labelled pos/neg. Returns paths labelled
+            paths_labelled = None
+            self.already_labelled.append(paths_labelled)
+            #do another round for valset, smaller. 
+            #swipe_labeler -> label random set of data -> labelled pos/neg. Returns paths labelled
+            paths_labelled = None
+            self.already_labelled.append(paths_labelled)
+            print("Total annotated valset : {} Positive {} Negative").format(get_num_files("eval_pos"),get_num_files('eval_neg'))
+            print("Total Labeled Data: Positive {} Negative {}".format(get_num_files("positive"),get_num_files('negative')))
+            
+            train_config = config['train']    
+            #data is ready ,start training and AL   
+            train_kwargs = dict(epochs = train_config['epochs'],
+                                opt = self.optim, 
+                                loss_fn = self.loss, 
+                                batch_size = train_config['batch_size'],
+                                )
+                                
+            al_config = config['active_learner']
+            al_kwargs = dict(
+                            strategy = al_config['strategy'],
+                            num_iters = al_config['iterations'],
+                            num_labelled = al_config['num_labelled'],
+                            limit  = al_config['limit']
+                            )
+
+
+    def train_al(self, model, already_labelled, unlabelled_images, train_kwargs, **al_kwargs):
+        iter = 0
+        num_iters = al_kwargs['num_iters']
+
+        logs = {'ckpt_path' : [],
+                'graph_logs' : []}
+        
+        while iter < num_iters:
+            print(f'-------------------{iter +1}----------------------')
+            iter+=1
+            ckpt_path, graph_logs = train_model_vanilla(self.model, GConst.LABELLED_DIR, **train_kwargs)
+            logs['ckpt_path'].append(ckpt_path)
+            logs['graph_logs'].append(graph_logs)
+            low_confs = get_low_conf_unlabeled_batched(model, unlabelled_images, self.already_labelled, **al_kwargs)
+            #pass these paths to swipe labeller. annotation done.
+            
+        return logs
 
 
 
