@@ -1,3 +1,4 @@
+from ast import Index
 from distutils.command.config import config
 import gc
 import os 
@@ -19,7 +20,6 @@ import matplotlib.pyplot as plt
 import importlib
 import warnings
 from operator import itemgetter
-from data.custom_datasets import AL_Dataset, RESISC_Eval
 import global_constants as GConst
 warnings.filterwarnings("ignore")
 
@@ -27,23 +27,23 @@ from utils import (load_config, load_model, load_opt_loss, initialise_data_dir, 
 from data import resisc
 from train.train_model import train_model_vanilla
 from query_strat.query import get_low_conf_unlabeled_batched
-
+from data.custom_datasets import AL_Dataset, RESISC_Eval
+from data.swipe_labeler import SwipeLabeller
+from data.indexer import Indexer
 
 class Pipeline:
 
     def __init__(self, config_path) -> None:
         self.config = load_config(config_path)
-        model = self.config['model']['model']
         model_kwargs = self.config['model'].get('model_params', {})
-        model_path = self.config['model'].get('model_path', None)
-        device = self.config['model']['device']
-        self.model = load_model(model, model_path, device, **model_kwargs)
+        self.model = load_model(**model_kwargs)
         self.optim, self.loss = load_opt_loss(self.model, self.config['train'])
         self.already_labelled = list()
         self.transform = transforms.Compose([
                           transforms.Resize((224,224)),
                           transforms.ToTensor(),
                           transforms.Normalize((0, 0, 0),(1, 1, 1))])
+        self.sl = SwipeLabeller()
 
         initialise_data_dir()
 
@@ -83,22 +83,41 @@ class Pipeline:
             logs = self.train_al_resisc(self.model, self.already_labelled, unlabelled_images, train_kwargs, **al_kwargs)
         
         elif config['data']['dataset'] == 'csv':
+
             self.df = pd.read_csv(config['data']['csv_path'])
             df = self.df.copy()
             query_image = df[df['status'] == 'query']['image_paths'].values()
+            unlabelled_paths = df[~df['status'] == 'query']
+            num_labelled = config['active_learner']['num_labelled']
+            
+            if self.config['active_learner']['preindex']:
+                self.index = Indexer(unlabelled_paths, self.model, img_size=224, 
+                                    embedding_size=128, index_path = None)
+            
             if len(query_image) > 1:
                 split_ratio = int(0.9 * len(query_image)) #TODO make this an arg
                 annotate_data(query_image[split_ratio:], 'eval_pos')
                 annotate_data(query_image[:split_ratio], 'positive')
             else:
                 annotate_data(query_image, 'positive')
+            
+            if self.preindex: 
+                #FAISS Fetch
+                similar_imgs = self.index.process_image(query_image[0], n_neighbors=num_labelled *2) #hardcoding sending only the first image here from query images
+                train_init = similar_imgs[:num_labelled]
+                val_init = similar_imgs[num_labelled:]
+                self.sl.label(train_init, is_eval=False)
+                self.sl.label(val_init, is_eval = True)
+            else:
+                random_init_imgs = unlabelled_paths.sample(num_labelled * 2)['image_paths'].values()
+                train_init = random_init_imgs[:num_labelled]
+                val_init = random_init_imgs[num_labelled:]
+
+                self.sl.label(train_init, is_eval=False)
+                self.sl.label(val_init, is_eval = True)
+
             #swipe_labeler -> label random set of data -> labelled pos/neg. Returns paths labelled
-            paths_labelled = None
-            self.already_labelled.append(paths_labelled)
-            #do another round for valset, smaller. 
-            #swipe_labeler -> label random set of data -> labelled pos/neg. Returns paths labelled
-            paths_labelled = None
-            self.already_labelled.append(paths_labelled)
+            self.already_labelled.extend(random_init_imgs)
             print("Total annotated valset : {} Positive {} Negative").format(get_num_files("eval_pos"),get_num_files('eval_neg'))
             print("Total Labeled Data: Positive {} Negative {}".format(get_num_files("positive"),get_num_files('negative')))
             
@@ -119,7 +138,7 @@ class Pipeline:
                             )
 
 
-    def train_al(self, model, already_labelled, unlabelled_images, train_kwargs, **al_kwargs):
+    def train_al(self, model, unlabelled_images, train_kwargs, **al_kwargs):
         iter = 0
         num_iters = al_kwargs['num_iters']
 
@@ -133,13 +152,15 @@ class Pipeline:
             logs['ckpt_path'].append(ckpt_path)
             logs['graph_logs'].append(graph_logs)
             low_confs = get_low_conf_unlabeled_batched(model, unlabelled_images, self.already_labelled, **al_kwargs)
-            #pass these paths to swipe labeller. annotation done.
-            
+            self.sl.label(low_confs, is_eval = False)
+            self.already_labelled.extend(low_confs)
+            print("Total Labeled Data: Positive {} Negative {}".format(get_num_files('positive'), get_num_files('negative')))
+
         return logs
 
 
 
-    def train_al_resisc(self, model, already_labelled, unlabelled_images, train_kwargs, **al_kwargs):
+    def train_al_resisc(self, model, unlabelled_images, train_kwargs, **al_kwargs):
         iter = 0
         eval_dataset = al_kwargs['eval_dataset']
         val_dataset = al_kwargs['val_dataset']
@@ -158,13 +179,13 @@ class Pipeline:
             low_confs = get_low_conf_unlabeled_batched(model, unlabelled_images, self.already_labelled, **al_kwargs)
             print("Images selected from: ",len(low_confs))
             for image in low_confs:
-                if image not in already_labelled:
+                if image not in self.already_labelled:
                     self.already_labelled.append(image)
                 if image.split('/')[-1].split('_')[0] == positive_class:
                     shutil.copy(image, os.path.join(GConst.LABELLED_DIR,'positive',image.split('/')[-1]))
                 else:
                     shutil.copy(image, os.path.join(GConst.LABELLED_DIR,'negative',image.split('/')[-1]))
-            print("Total Labeled Data: Positive {} Negative {}".format(len(list(paths.list_images(os.path.join(GConst.LABELLED_DIR, 'positive')))),len(list(paths.list_images(os.path.join(GConst.LABELLED_DIR, 'negative'))))))
+            print("Total Labeled Data: Positive {} Negative {}".format(get_num_files('positive'), get_num_files('negative')))
 
         return logs
 

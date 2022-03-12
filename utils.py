@@ -15,12 +15,19 @@ def load_config(config_path):
         config = yaml.safe_load(file)
     return config
 
-def load_model(model, model_path = None, device = 'cuda', **model_kwargs):
+def load_model(**model_kwargs):
+    model = model_kwargs['model']
+    device = model_kwargs['device']
+    model_path = model_kwargs['model_path']
+    is_ssl = model_kwargs['ssl']
     """Loads PyTorch model along with statedict(if applicable) to device"""
-    model = getattr(importlib.import_module("models.{}".format(model)), model)(**model_kwargs)
-    model.to(device)
-    if model_path:
-        model.load_state_dict(torch.load(model_path))
+    if is_ssl:
+        pass
+    else:
+        model = getattr(importlib.import_module("models.{}".format(model)), model)(**model_kwargs)
+        model.to(device)
+        if model_path:
+            model.load_state_dict(torch.load(model_path))
     return model
 
 def load_opt_loss(model, train_config):
@@ -68,7 +75,9 @@ def get_num_files(folder):
         return len(list(paths.list_images(os.path.join(GConst.EVAL_DIR,'negative'))))
     elif folder == 'labelled':
         return len(list(paths.list_images(GConst.LABELLED_DIR)))
-
+    elif folder == 'eval_labelled':
+        return len(list(paths.list_images(GConst.EVAL_DIR)))
+        
 def annotate_data(paths, folder):
     if folder == "positive":
         copy_data(paths, os.path.join(GConst.LABELLED_DIR,'positive'))

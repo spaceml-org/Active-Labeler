@@ -3,6 +3,18 @@ from operator import itemgetter
 
 from query_strat.query_utils import get_samples
 
+'''
+Design notes for custom strategies : 
+
+Input : 
+confidences:  Confidence values of all the unlabelled images
+number : Number of images to be queried
+
+Output :
+Paths of all the intelligently queried images
+'''
+
+
 def least_confidence(confidences, number):
     print("Using Least Confidence Strategy")
     least_conf_indices = np.argsort(confidences['conf_vals'])
