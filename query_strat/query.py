@@ -10,7 +10,6 @@ import query_strat.query_strategies as query_strategies
 
 def get_low_conf_unlabeled_batched(model, image_paths, already_labelled, **al_kwargs):
 
-  
   strategy = al_kwargs['strategy']
   num_labelled = al_kwargs['num_labelled']
   limit = al_kwargs['limit']
@@ -25,7 +24,7 @@ def get_low_conf_unlabeled_batched(model, image_paths, already_labelled, **al_kw
   dataset = AL_Dataset(unlabeled_imgs, limit, t)
   data_loader = torch.utils.data.DataLoader(dataset, shuffle=False, num_workers=4, batch_size=64) #add num workers arg
 
-  confidences = {'conf_vals': [], 
+  confidences = {'conf_vals': [],
                  'loc' : []}
 
   with torch.no_grad():

@@ -79,14 +79,14 @@ def val_model_vanilla(model, eval_dataset, loss_fn):
       epoch_acc.append(acc)
       epoch_f1.append(fscore)
       
-  avg_acc = np.mean(epoch_acc) 
+  avg_acc = np.mean(epoch_acc)
   avg_loss = np.mean(epoch_loss)
   avg_fscore = np.mean(epoch_f1)
 
   return avg_fscore, avg_acc, avg_loss
 
 
-def train_model_vanilla(model, train_datapath, eval_dataset, val_dataset, **train_kwargs):
+def train_model_vanilla(model, train_datapath, eval_dataset=None, val_dataset=None, **train_kwargs):
 
   num_epochs = train_kwargs['epochs']
   batch_size = train_kwargs['batch_size']
@@ -102,6 +102,11 @@ def train_model_vanilla(model, train_datapath, eval_dataset, val_dataset, **trai
                           transforms.Normalize((0, 0, 0),(1, 1, 1))
   ])
 
+  val_t = transforms.Compose([
+                          transforms.Resize((224,224)),
+                          transforms.ToTensor(),
+                          transforms.Normalize((0, 0, 0),(1, 1, 1))])
+
   
   train_dataset = ImageFolder(train_datapath, transform=t)
   train_imgs = train_dataset.imgs
@@ -110,7 +115,8 @@ def train_model_vanilla(model, train_datapath, eval_dataset, val_dataset, **trai
                                           shuffle=True, num_workers=4)
 
 
-  
+  val_dataset = ImageFolder(GConst.EVAL_DIR, transform = val_t)
+
   print("Training")
   print('{:<10s}{:>4s}{:>12s}{:>12s}{:>12s}{:>12s}{:>12s}'.format("Epoch", "Train Loss", "Train Acc", "Train F1", "Val Loss", "Val Acc", "Val F1"))
 
@@ -154,7 +160,7 @@ def train_model_vanilla(model, train_datapath, eval_dataset, val_dataset, **trai
   
   fscore = 0.0
   auc = 0.0
-  
+
   timestamp = re.sub('\.[0-9]*','_',str(datetime.datetime.now())).replace(" ", "_").replace("-", "").replace(":","")
   training_size = str(len(train_imgs))
   accuracies = str(fscore)+"_"+str(auc)
@@ -162,7 +168,8 @@ def train_model_vanilla(model, train_datapath, eval_dataset, val_dataset, **trai
   torch.save(model.state_dict(), model_path)
   
   print("Since our model has become confident enough, testing on leftover unlabeled data")
-  evaluate_al(model, eval_dataset, loss_fn)
+  if eval_dataset:
+    evaluate_al(model, eval_dataset, loss_fn)
 
   return model_path, graph_logs
 

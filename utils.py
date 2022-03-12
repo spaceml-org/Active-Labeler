@@ -7,6 +7,7 @@ import os
 import shutil
 from tqdm import tqdm
 import global_constants as GConst
+from imutils import paths
 
 def load_config(config_path):
     """" Loads the config file into a dictionary. """
@@ -53,6 +54,20 @@ def copy_data(paths, folder):
     for image in tqdm(paths):
         shutil.copy(image, os.path.join(folder, image))
     print('Data Copied to {}'.format(folder))
+
+def get_num_files(folder):
+    if folder == "positive":
+        return len(list(paths.list_images(os.path.join(GConst.LABELLED_DIR,'positive'))))
+    elif folder == 'negative':
+        return len(list(paths.list_images(os.path.join(GConst.LABELLED_DIR,'negative'))))
+    elif folder == 'unlabelled':
+        return len(list(paths.list_images(GConst.UNLABELLED_DIR)))
+    elif folder == 'eval_pos':
+        return len(list(paths.list_images(os.path.join(GConst.EVAL_DIR,'positive'))))
+    elif folder == 'eval_neg':
+        return len(list(paths.list_images(os.path.join(GConst.EVAL_DIR,'negative'))))
+    elif folder == 'labelled':
+        return len(list(paths.list_images(GConst.LABELLED_DIR)))
 
 def annotate_data(paths, folder):
     if folder == "positive":
