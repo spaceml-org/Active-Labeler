@@ -8,6 +8,8 @@ import shutil
 from tqdm import tqdm
 import global_constants as GConst
 from imutils import paths
+from external_lib.SSL.models import SIMCLR, SIMSIAM
+
 
 def load_config(config_path):
     """" Loads the config file into a dictionary. """
@@ -22,7 +24,9 @@ def load_model(**model_kwargs):
     is_ssl = model_kwargs['ssl']
     """Loads PyTorch model along with statedict(if applicable) to device"""
     if is_ssl:
-        pass
+        model_cls = SIMCLR.SIMCLR.load_from_checkpoint(model_path)
+        model = model_cls.encoder
+        model.to(device)
     else:
         model = getattr(importlib.import_module("models.{}".format(model)), model)(**model_kwargs)
         model.to(device)

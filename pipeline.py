@@ -43,7 +43,7 @@ class Pipeline:
                           transforms.Resize((224,224)),
                           transforms.ToTensor(),
                           transforms.Normalize((0, 0, 0),(1, 1, 1))])
-        self.sl = SwipeLabeller()
+        self.sl = SwipeLabeller(self.config)
 
         initialise_data_dir()
 
@@ -124,9 +124,9 @@ class Pipeline:
             train_config = config['train']    
             #data is ready ,start training and AL   
             train_kwargs = dict(epochs = train_config['epochs'],
-                                opt = self.optim, 
+                                opt = self.optim,
                                 loss_fn = self.loss, 
-                                batch_size = train_config['batch_size'],
+                                batch_size = train_config['batch_size']
                                 )
                                 
             al_config = config['active_learner']
