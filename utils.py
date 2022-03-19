@@ -29,7 +29,7 @@ def load_model(**model_kwargs):
     ssl_config = model_kwargs.get('ssl', {})
     """Loads PyTorch model along with statedict(if applicable) to device"""
     if ssl_config:
-        model_path = model_kwargs['encoder']['encoder_path']
+        model_path = ssl_config['encoder']['encoder_path']
         if ssl_config['encoder']['encoder_type'] == 'SIMCLR':
             encoder = SIMCLR.SIMCLR.load_from_checkpoint(model_path, DATA_PATH = GConst.UNLABELLED_DIR).encoder
         elif ssl_config['encoder']['encoder_type'] == 'SIMSIAM':
