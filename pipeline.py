@@ -1,4 +1,5 @@
 from ast import Index
+from copy import copy
 from distutils.command.config import config
 import gc
 import sys
@@ -25,7 +26,7 @@ import global_constants as GConst
 warnings.filterwarnings("ignore")
 sys.path.append('{}/external_lib/SSL/'.format(os.getcwd()))
 
-from utils import (load_config, load_model, load_opt_loss, initialise_data_dir, annotate_data, get_num_files)
+from utils import (copy_data, load_config, load_model, load_opt_loss, initialise_data_dir, annotate_data, get_num_files)
 from data import resisc
 from train.train_model import train_model_vanilla
 from query_strat.query import get_low_conf_unlabeled_batched
@@ -33,6 +34,14 @@ from data.custom_datasets import AL_Dataset, RESISC_Eval
 from data.swipe_labeler import SwipeLabeller
 from data.indexer import Indexer
 
+def adhoc_copy(unlabelled_paths):
+    imgs = unlabelled_paths[:4]
+    for i in range(len(imgs)):
+        if i %2 == 0:
+            shutil.copy(imgs[i], os.path.join(GConst.LABELLED_DIR, 'negative'))
+        else:
+            shutil.copy(imgs[i], os.path.join(GConst.EVAL_DIR, 'negative'))
+    print('ADHOC DONE : ', len(imgs))
 class Pipeline:
 
     def __init__(self, config_path) -> None:
@@ -139,6 +148,8 @@ class Pipeline:
                             limit  = al_config['limit']
                             )
             
+            adhoc_copy(unlabelled_images)
+
             logs = self.train_al(self.model, self.already_labelled, train_kwargs, **al_kwargs)
 
 
