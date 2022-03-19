@@ -9,7 +9,6 @@ import PIL.Image as Image
 import matplotlib.pyplot as plt
 import faiss
 
-
 from torchvision import transforms
 from data.custom_datasets import AL_Dataset
 from torch.utils.data import DataLoader
