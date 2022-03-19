@@ -104,8 +104,8 @@ class Pipeline:
             num_labelled = config['active_learner']['num_labelled']
             self.preindex = self.config['active_learner']['preindex']
             if self.preindex:
-                self.index = Indexer(unlabelled_paths, self.model, img_size=224, 
-                                    embedding_size=128, index_path = None)
+                self.index = Indexer(unlabelled_paths_lis, self.model, img_size=224, 
+                                     index_path = None)
             
             if len(query_image) > 1:
                 split_ratio = int(0.9 * len(query_image)) #TODO make this an arg
@@ -132,7 +132,7 @@ class Pipeline:
 
             #swipe_labeler -> label random set of data -> labelled pos/neg. Returns paths labelled
             self.already_labelled.extend(random_init_imgs)
-            print("Total annotated valset : {} Positive {} Negative".format(get_num_files("eval_pos"),get_num_files('eval_neg')) )
+            print("Total annotated valset : {} Positive {} Negative".format(get_num_files("eval_pos"),get_num_files('eval_neg')))
             print("Total Labeled Data: Positive {} Negative {}".format(get_num_files("positive"),get_num_files('negative')))
             
             train_config = config['train']    

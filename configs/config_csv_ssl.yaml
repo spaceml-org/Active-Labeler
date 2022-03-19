@@ -17,7 +17,7 @@ model:
     
 data:
   dataset : csv
-  path : /home/ubuntu/t/Active-Labeler/sample.csv
+  path : configs/merced_test.csv
 train:
   optimizer :
     name : SGD
