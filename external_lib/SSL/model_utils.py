@@ -12,7 +12,7 @@ def load_model(args):
     if '.ckpt' in encoder_name:
         if technique.lower() == 'simclr':
             model = SIMCLR.load_from_checkpoint(encoder_name, **args.__dict__)
-        elif technique.lower() == 'simsiam:
+        elif technique.lower() == 'simsiam':
             model = SIMSIAM.load_from_checkpoint(encoder_name, **args.__dict__)
         elif technique.lower() == 'classifier':
             model = classifier.load_from_checkpoint(encoder_name, **args.__dict__)
@@ -30,13 +30,13 @@ def load_model(args):
     elif encoder_name == 'resnet18':
         encoder, embedding_size = encoders.resnet18(pretrained=False, first_conv=True, maxpool1=True, return_all_feature_maps=False), 512
         init_model = False
-    else if encoder_name == 'imagenet_resnet18':
+    elif encoder_name == 'imagenet_resnet18':
         encoder, embedding_size = encoders.resnet18(pretrained=True, first_conv=True, maxpool1=True, return_all_feature_maps=False), 512
         init_model = False
-    else if encoder_name == 'resnet50':
+    elif encoder_name == 'resnet50':
         encoder, embedding_size = encoders.resnet50(pretrained=False, first_conv=True, maxpool1=True, return_all_feature_maps=False), 2048
         init_model = False
-    else if encoder_name == 'imagenet_resnet50':
+    elif encoder_name == 'imagenet_resnet50':
         encoder, embedding_size = encoders.resnet50(pretrained=True, first_conv=True, maxpool1=True, return_all_feature_maps=False), 2048
         init_model = False
     
@@ -56,9 +56,9 @@ def load_model(args):
     if not init_model:
         if technique.lower() == 'simclr':
             model = SIMCLR(**args.__dict__)
-        else if technique.lower() == 'simsiam:
+        elif technique.lower() == 'simsiam:
             model = SIMSIAM(**args.__dict__)
-        else if technique.lower() == 'classifier':
+        elif technique.lower() == 'classifier':
             model = classifier(**args.__dict__)
 
         
