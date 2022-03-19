@@ -88,7 +88,7 @@ class Pipeline:
 
             self.df = pd.read_csv(config['data']['path'])
             df = self.df.copy()
-            query_image = df[df['status'] == 'query'][GConst.IMAGE_PATH_COL].values()
+            query_image = df[df['status'] == 'query'][GConst.IMAGE_PATH_COL].values
             unlabelled_paths = df[~df['status'] == 'query']
             num_labelled = config['active_learner']['num_labelled']
             self.preindex = self.config['active_learner']['preindex']
@@ -111,7 +111,7 @@ class Pipeline:
                 self.sl.label(train_init, is_eval=False)
                 self.sl.label(val_init, is_eval = True)
             else:
-                random_init_imgs = unlabelled_paths.sample(num_labelled * 2)[GConst.IMAGE_PATH_COL].values()
+                random_init_imgs = unlabelled_paths.sample(num_labelled * 2)[GConst.IMAGE_PATH_COL].values
                 train_init = random_init_imgs[:num_labelled]
                 val_init = random_init_imgs[num_labelled:]
 
