@@ -56,7 +56,7 @@ def load_model(args):
     if not init_model:
         if technique.lower() == 'simclr':
             model = SIMCLR(**args.__dict__)
-        elif technique.lower() == 'simsiam:
+        elif technique.lower() == 'simsiam':
             model = SIMSIAM(**args.__dict__)
         elif technique.lower() == 'classifier':
             model = classifier(**args.__dict__)
