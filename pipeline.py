@@ -1,6 +1,7 @@
 from ast import Index
 from distutils.command.config import config
 import gc
+import sys
 import os 
 import imutils
 from random import shuffle 
@@ -22,6 +23,7 @@ import warnings
 from operator import itemgetter
 import global_constants as GConst
 warnings.filterwarnings("ignore")
+sys.path.append('{}/external_lib/SSL/'.format(os.getcwd()))
 
 from utils import (load_config, load_model, load_opt_loss, initialise_data_dir, annotate_data, get_num_files)
 from data import resisc
