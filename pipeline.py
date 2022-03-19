@@ -148,7 +148,7 @@ class Pipeline:
                             limit  = al_config['limit']
                             )
             
-            adhoc_copy(unlabelled_images)
+            adhoc_copy(unlabelled_paths)
 
             logs = self.train_al(self.model, self.already_labelled, train_kwargs, **al_kwargs)
 
