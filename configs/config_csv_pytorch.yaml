@@ -1,0 +1,22 @@
+model:
+  model : Rnet # model and model_path need not be specified if using SSL. i
+  model_path : null
+  device  : cuda    
+data:
+  dataset : csv
+  path : /home/ubuntu/t/Active-Labeler/sample.csv
+train:
+  optimizer :
+    name : SGD
+    config :
+      momentum : 0
+  loss_fn :
+    name : BCELoss
+  batch_size : 64
+  epochs : 5
+active_learner :
+  iterations : 30
+  strategy : uncertainty_sampling
+  num_labelled : 50
+  limit : -1
+  preindex : False
