@@ -22,6 +22,7 @@ def load_config(config_path):
 
 def load_model(**model_kwargs):
     device = model_kwargs['device']
+
     if device != "cuda":
         raise NotImplementedError("Currently supporting only cuda backends, please change device in the config to cuda.")
 
