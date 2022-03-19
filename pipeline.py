@@ -99,6 +99,7 @@ class Pipeline:
             df = self.df.copy()
             query_image = df[df['status'] == 'query'][GConst.IMAGE_PATH_COL].values
             unlabelled_paths = df[df['status'] != 'query']
+            unlabelled_paths_lis = unlabelled_paths[GConst.IMAGE_PATH_COL].values
             num_labelled = config['active_learner']['num_labelled']
             self.preindex = self.config['active_learner']['preindex']
             if self.preindex:
@@ -111,6 +112,7 @@ class Pipeline:
                 annotate_data(query_image[:split_ratio], 'positive')
             else:
                 annotate_data(query_image, 'positive')
+                annotate_data(query_image, 'eval_pos')
             
             if self.preindex: 
                 #FAISS Fetch
@@ -147,10 +149,10 @@ class Pipeline:
                             num_labelled = al_config['num_labelled'],
                             limit  = al_config['limit']
                             )
-            
+
             adhoc_copy(unlabelled_paths)
 
-            logs = self.train_al(self.model, self.already_labelled, train_kwargs, **al_kwargs)
+            logs = self.train_al(self.model, unlabelled_paths_lis, train_kwargs, **al_kwargs)
 
 
     def train_al(self, model, unlabelled_images, train_kwargs, **al_kwargs):

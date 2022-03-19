@@ -18,6 +18,6 @@ train:
 active_learner :
   iterations : 30
   strategy : uncertainty_sampling
-  num_labelled : 50
+  num_labelled : 20
   limit : -1
   preindex : False
