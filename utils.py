@@ -51,6 +51,8 @@ def load_model(**model_kwargs):
 
         model = ClassifierModel(device, encoder, linear_model)
 
+        
+
     else:
         model = getattr(importlib.import_module("models.{}".format(model)), model)(**model_kwargs)
         model.to(device)
