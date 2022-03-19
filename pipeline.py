@@ -89,7 +89,7 @@ class Pipeline:
             self.df = pd.read_csv(config['data']['path'])
             df = self.df.copy()
             query_image = df[df['status'] == 'query'][GConst.IMAGE_PATH_COL].values
-            unlabelled_paths = df[~df['status'] == 'query']
+            unlabelled_paths = df[df['status'] != 'query']
             num_labelled = config['active_learner']['num_labelled']
             self.preindex = self.config['active_learner']['preindex']
             if self.preindex:
