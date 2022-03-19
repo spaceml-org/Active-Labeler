@@ -46,6 +46,8 @@ class Pipeline:
 
     def __init__(self, config_path) -> None:
         self.config = load_config(config_path)
+        initialise_data_dir()
+
         model_kwargs = self.config['model']
         self.model = load_model(**model_kwargs)
         self.optim, self.loss = load_opt_loss(self.model, self.config)
@@ -56,7 +58,6 @@ class Pipeline:
                           transforms.Normalize((0, 0, 0),(1, 1, 1))])
         self.sl = SwipeLabeller(self.config)
 
-        initialise_data_dir()
 
     def main(self):
         config = self.config
