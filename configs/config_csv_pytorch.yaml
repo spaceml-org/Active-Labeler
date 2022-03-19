@@ -10,7 +10,7 @@ train:
     name : SGD
     config :
       momentum : 0
-      lr : 1e-3
+      lr : 1.0e-3
   loss_fn :
     name : BCELoss
   batch_size : 64

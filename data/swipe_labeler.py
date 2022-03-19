@@ -21,7 +21,7 @@ class SwipeLabeller:
         self.unsure_path = GConst.UNSURE_DIR
         print("Swipe Labeler Initialised")
 
-        print(f"\n {len(list(paths.list_images(self.unlabeled_path)))} images to label.")
+        print(f"\n {len(list(paths.list_images(self.unlabelled_path)))} images to label.")
 
         # unsure_path = self.parameters["swipe_labeler"]["unsure_path"]
 
