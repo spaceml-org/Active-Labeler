@@ -24,7 +24,7 @@ def load_model(**model_kwargs):
     model = model_kwargs['model']
     device = model_kwargs['device']
     model_path = model_kwargs['model_path']
-    ssl_config = model_kwargs['ssl']
+    ssl_config = model_kwargs.get('ssl', {})
     """Loads PyTorch model along with statedict(if applicable) to device"""
     if ssl_config:
         model_path = model_kwargs['encoder']['encoder_path']
