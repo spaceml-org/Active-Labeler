@@ -94,15 +94,19 @@ def initialise_data_dir():
     if os.path.exists('checkpoints/'):
         shutil.rmtree('checkpoints/')      
 
+    if os.path.exists('Dataset/To_Be_Labelled'):
+        shutil.rmtree('Dataset/To_Be_Labelled')
+
     os.makedirs('Dataset/Labelled/positive')
     os.makedirs('Dataset/Labelled/negative')
     os.makedirs('Dataset/Eval/positive')
     os.makedirs('Dataset/Eval/negative')
     os.makedirs('checkpoints/')
+    os.makedirs('Dataset/To_Be_Labelled')
 
 def copy_data(paths, folder):
     for image in tqdm(paths):
-        shutil.copy(image, os.path.join(folder, image))
+        shutil.copy(image, folder)
     print('Data Copied to {}'.format(folder))
 
 def get_num_files(folder):
