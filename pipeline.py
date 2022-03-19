@@ -138,6 +138,8 @@ class Pipeline:
                             num_labelled = al_config['num_labelled'],
                             limit  = al_config['limit']
                             )
+            
+            logs = self.train_al(self.model, self.already_labelled, train_kwargs, **al_kwargs)
 
 
     def train_al(self, model, unlabelled_images, train_kwargs, **al_kwargs):
