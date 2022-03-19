@@ -35,7 +35,7 @@ from data.swipe_labeler import SwipeLabeller
 from data.indexer import Indexer
 
 def adhoc_copy(unlabelled_paths):
-    imgs = unlabelled_paths[:4]
+    imgs = unlabelled_paths['image_paths'].values[:4]
     for i in range(len(imgs)):
         if i %2 == 0:
             shutil.copy(imgs[i], os.path.join(GConst.LABELLED_DIR, 'negative'))
