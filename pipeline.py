@@ -35,9 +35,9 @@ class Pipeline:
 
     def __init__(self, config_path) -> None:
         self.config = load_config(config_path)
-        model_kwargs = self.config['model'].get('model_params', {})
+        model_kwargs = self.config['model']
         self.model = load_model(**model_kwargs)
-        self.optim, self.loss = load_opt_loss(self.model, self.config['train'])
+        self.optim, self.loss = load_opt_loss(self.model, self.config)
         self.already_labelled = list()
         self.transform = transforms.Compose([
                           transforms.Resize((224,224)),

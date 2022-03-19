@@ -1,3 +1,4 @@
+from json import encoder
 import yaml
 import torch
 import importlib
@@ -9,6 +10,8 @@ from tqdm import tqdm
 import global_constants as GConst
 from imutils import paths
 from external_lib.SSL.models import SIMCLR, SIMSIAM
+from models.LinearEval import SSLEvaluator, SSLEvaluatorOneLayer
+from models.SSLClassifier import ClassifierModel
 
 
 def load_config(config_path):
@@ -21,12 +24,33 @@ def load_model(**model_kwargs):
     model = model_kwargs['model']
     device = model_kwargs['device']
     model_path = model_kwargs['model_path']
-    is_ssl = model_kwargs['ssl']
+    ssl_config = model_kwargs['ssl']
     """Loads PyTorch model along with statedict(if applicable) to device"""
-    if is_ssl:
-        model_cls = SIMCLR.SIMCLR.load_from_checkpoint(model_path)
-        model = model_cls.encoder
-        model.to(device)
+    if ssl_config:
+        model_path = model_kwargs['encoder']['encoder_path']
+        if ssl_config['encoder']['encoder_type'] == 'SIMCLR':
+            encoder = SIMCLR.SIMCLR.load_from_checkpoint(model_path, DATA_PATH = GConst.UNLABELLED_DIR).encoder
+        elif ssl_config['encoder']['encoder_type'] == 'SIMSIAM':
+            encoder = SIMSIAM.SIMSIAM.load_from_checkpoint(model_path, DATA_PATH = GConst.UNLABELLED_DIR).encoder
+        
+        if ssl_config["classifier"]["classifier_type"] == "SSLEvaluator":
+            linear_model = SSLEvaluator(
+                n_input = ssl_config["encoder"]["e_embedding_size"],
+                n_classes = ssl_config["classifier"]["c_num_classes"],
+                p = ssl_config["classifier"]["c_dropout"],
+                n_hidden = ssl_config["classifier"]["c_hidden_dim"],
+            )
+        
+        elif ssl_config["classifier"]["classifier_type"] == "SSLEvaluatorOneLayer":
+            linear_model = SSLEvaluatorOneLayer(
+                n_input = ssl_config["encoder"]["e_embedding_size"],
+                n_classes = ssl_config["classifier"]["c_num_classes"],
+                p = ssl_config["classifier"]["c_dropout"],
+                n_hidden = ssl_config["classifier"]["c_hidden_dim"],
+            )
+
+        model = ClassifierModel(device, encoder, linear_model)
+
     else:
         model = getattr(importlib.import_module("models.{}".format(model)), model)(**model_kwargs)
         model.to(device)
@@ -34,13 +58,26 @@ def load_model(**model_kwargs):
             model.load_state_dict(torch.load(model_path))
     return model
 
-def load_opt_loss(model, train_config):
+
+def load_opt_loss(model, config, is_ssl = False):
     """Fetches optimiser and loss fn params from config and loads"""
-    opt_params = train_config['optimizer']
-    loss_params = train_config['loss_fn']
+    opt_params = config['train']['optimizer']
+    loss_params = config['train']['loss_fn']
+    ssl_config = config['model'].get('ssl', {})
     loss_kwargs = {k:loss_params[k] for k in loss_params if k!='name'}
-    optimizer = getattr(optim, opt_params['name'])(
-                model.parameters(), **opt_params.get('config', {}))
+    if ssl_config:
+        encoder_lr = ssl_config['encoder']['e_lr'] if ssl_config['encoder']['train_encoder'] else 0
+        optimizer = getattr(optim, opt_params['name'])(
+            [
+                {"params": model.encoder.parameters(), "lr": encoder_lr},
+                {"params": model.linear_model.parameters(), "lr": ssl_config['classifier']['c_lr']},
+            ],
+            **opt_params.get('config', {})
+        )
+    else:
+        optimizer = getattr(optim, opt_params['name'])(
+                    model.parameters(), **opt_params.get('config', {}))
+
     loss_fn = getattr(nn, loss_params['name'])(**loss_kwargs)
 
     return optimizer, loss_fn

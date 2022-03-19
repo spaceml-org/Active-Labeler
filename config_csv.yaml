@@ -1,8 +1,22 @@
 model:
-  model : Rnet
+  model : Rnet # model and model_path need not be specified if using SSL. i
   model_path : null
   device  : cuda
-  ssl : False
+  ssl : 
+    encoder:
+      encoder_type: SIMCLR
+      encoder_path:  /content/models/SIMCLR_ssl.ckpt
+      e_embedding_size: 2048
+      e_lr: 1e-2
+      train_encoder: False
+
+    classifier:
+      classifier_type: SSLEvaluator
+      c_num_classes: 2
+      c_hidden_dim: 64
+      c_dropout: 0.1
+      c_lr : 1e-6 
+    
 data:
   dataset : csv
   path : /home/ubuntu/t/Active-Labeler/sample.csv
@@ -10,7 +24,7 @@ train:
   optimizer :
     name : SGD
     config :
-      lr : 0.01
+      momentum : 0
   loss_fn :
     name : BCELoss
   batch_size : 64
