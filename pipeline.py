@@ -84,13 +84,13 @@ class Pipeline:
         
         elif config['data']['dataset'] == 'csv':
 
-            self.df = pd.read_csv(config['data']['csv_path'])
+            self.df = pd.read_csv(config['data']['path'])
             df = self.df.copy()
             query_image = df[df['status'] == 'query']['image_paths'].values()
             unlabelled_paths = df[~df['status'] == 'query']
             num_labelled = config['active_learner']['num_labelled']
-            
-            if self.config['active_learner']['preindex']:
+            self.preindex = self.config['active_learner']['preindex']
+            if self.preindex:
                 self.index = Indexer(unlabelled_paths, self.model, img_size=224, 
                                     embedding_size=128, index_path = None)
             
