@@ -21,9 +21,10 @@ def load_config(config_path):
     return config
 
 def load_model(**model_kwargs):
-    model = model_kwargs['model']
     device = model_kwargs['device']
-    model_path = model_kwargs['model_path']
+    if device != "cuda":
+        raise NotImplementedError("Currently supporting only cuda backends, please change device in the config to cuda.")
+
     ssl_config = model_kwargs.get('ssl', {})
     """Loads PyTorch model along with statedict(if applicable) to device"""
     if ssl_config:
@@ -51,9 +52,9 @@ def load_model(**model_kwargs):
 
         model = ClassifierModel(device, encoder, linear_model)
 
-        
-
     else:
+        model = model_kwargs['model']
+        model_path = model_kwargs['model_path']
         model = getattr(importlib.import_module("models.{}".format(model)), model)(**model_kwargs)
         model.to(device)
         if model_path:
