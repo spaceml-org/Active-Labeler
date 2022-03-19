@@ -120,7 +120,7 @@ class Pipeline:
 
             #swipe_labeler -> label random set of data -> labelled pos/neg. Returns paths labelled
             self.already_labelled.extend(random_init_imgs)
-            print("Total annotated valset : {} Positive {} Negative").format(get_num_files("eval_pos"),get_num_files('eval_neg'))
+            print("Total annotated valset : {} Positive {} Negative".format(get_num_files("eval_pos"),get_num_files('eval_neg')) )
             print("Total Labeled Data: Positive {} Negative {}".format(get_num_files("positive"),get_num_files('negative')))
             
             train_config = config['train']    
