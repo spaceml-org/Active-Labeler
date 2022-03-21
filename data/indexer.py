@@ -14,6 +14,8 @@ from data.custom_datasets import AL_Dataset
 from torch.utils.data import DataLoader
 import torchvision.datasets as datasets
 import torch
+from PIL import Image
+import torch.nn as nn
 
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -36,10 +38,11 @@ class Indexer:
     def process_image(self, img, n_neighbors=5):
         src = get_embedding(self.model, img)
         scores, neighbours = self.index.search(x=src, k=n_neighbors)
-        result = [self.images_list[neighbours[i]] for i in range(len(neighbours))]
+        result = list(self.images_list[neighbours[i]] for i in range(len(neighbours)))
         return result
 
 def get_matrix(model, DATA_PATH, image_size=224) -> np.ndarray:
+
     def to_tensor(pil):
         return torch.tensor(np.array(pil)).permute(2, 0, 1).float()
 
@@ -47,11 +50,13 @@ def get_matrix(model, DATA_PATH, image_size=224) -> np.ndarray:
         [transforms.Resize((image_size, image_size)), transforms.Lambda(to_tensor)]
     )
 
+    #define output layer
+    model.enc.fc = nn.Identity()
+
     dataset = AL_Dataset(DATA_PATH, transform=t, limit = -1)
     model.eval()
     if device == "cuda":
         model.cuda()
-
     with torch.no_grad():
         data_matrix = torch.Tensor().cuda()
         bs = 128
@@ -60,7 +65,7 @@ def get_matrix(model, DATA_PATH, image_size=224) -> np.ndarray:
         loader = DataLoader(dataset, batch_size=bs, shuffle=False)
         for i, batch in enumerate(loader):
             x = batch[0].cuda() if device == "cuda" else batch[0]
-            embeddings = model(x)[0]
+            embeddings = model(x)
             data_matrix = torch.cat([data_matrix, embeddings])
 
     return data_matrix.cpu().detach().numpy()
@@ -84,9 +89,13 @@ def get_embedding(model, im):
     model.eval()
     if device == "cuda":
         model.cuda()
+
+    im = Image.open(im) if isinstance(im, str) else im
     datapoint = (
         t(im).unsqueeze(0).cuda() if device == "cuda" else t(im).unsqueeze(0)
     )  # only a single datapoint so we unsqueeze to add a dimension
+    
     with torch.no_grad():
         embedding = model(datapoint)  # get_embedding
+
     return embedding.detach().cpu().numpy()
