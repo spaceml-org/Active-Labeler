@@ -37,7 +37,8 @@ class Indexer:
 
     def process_image(self, img, n_neighbors=5):
         src = get_embedding(self.model, img)
-        scores, neighbours = self.index.search(x=src, k=n_neighbors)[0]
+        scores, neighbours = self.index.search(x=src, k=n_neighbors)
+        neighbours = neighbours[0]
         result = list(self.images_list[neighbours[i]] for i in range(len(neighbours)))
         return result
 
