@@ -27,7 +27,7 @@ class Indexer:
 
         self.model = model
         self.imgs = imgs
-        self.embeddings = get_matrix(self.model, self.imgs, img_size)
+        self.embeddings, self.inf_model = get_matrix(self.model, self.imgs, img_size)
 
         self.images_list = list(imgs)
         
@@ -37,7 +37,7 @@ class Indexer:
             self.index = index_gen(self.embeddings)
 
     def process_image(self, img, n_neighbors=5):
-        src = get_embedding(self.model, img)
+        src = get_embedding(self.inf_model, img)
         scores, neighbours = self.index.search(x=src, k=n_neighbors)
         neighbours = neighbours[0]
         result = list(self.images_list[neighbours[i]] for i in range(len(neighbours)))
@@ -70,7 +70,7 @@ def get_matrix(model, DATA_PATH, image_size=224) -> np.ndarray:
             embeddings = inf_model(x)
             data_matrix = torch.cat([data_matrix, embeddings])
 
-    return data_matrix.cpu().detach().numpy()
+    return data_matrix.cpu().detach().numpy(), inf_model
 
 
 def index_gen(embeddings):
