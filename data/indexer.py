@@ -50,14 +50,14 @@ def get_matrix(model, DATA_PATH, image_size=224) -> np.ndarray:
     t = transforms.Compose(
         [transforms.Resize((image_size, image_size)), transforms.Lambda(to_tensor)]
     )
-
+    inf_model = model.copy()
     #define output layer
-    model.enc.fc = nn.Identity()
+    inf_model.enc.fc = nn.Identity()
 
     dataset = AL_Dataset(DATA_PATH, transform=t, limit = -1)
-    model.eval()
+    inf_model.eval()
     if device == "cuda":
-        model.cuda()
+        inf_model.cuda()
     with torch.no_grad():
         data_matrix = torch.Tensor().cuda()
         bs = 128
@@ -66,7 +66,7 @@ def get_matrix(model, DATA_PATH, image_size=224) -> np.ndarray:
         loader = DataLoader(dataset, batch_size=bs, shuffle=False)
         for i, batch in enumerate(loader):
             x = batch[0].cuda() if device == "cuda" else batch[0]
-            embeddings = model(x)
+            embeddings = inf_model(x)
             data_matrix = torch.cat([data_matrix, embeddings])
 
     return data_matrix.cpu().detach().numpy()
