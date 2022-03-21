@@ -122,6 +122,7 @@ class Pipeline:
                 val_init = similar_imgs[num_labelled:]
                 self.sl.label(train_init, is_eval=False)
                 self.sl.label(val_init, is_eval = True)
+                self.already_labelled.extend(similar_imgs)
             else:
                 random_init_imgs = unlabelled_paths.sample(num_labelled * 2)[GConst.IMAGE_PATH_COL].values
                 train_init = random_init_imgs[:num_labelled]
@@ -129,9 +130,9 @@ class Pipeline:
 
                 self.sl.label(train_init, is_eval=False)
                 self.sl.label(val_init, is_eval = True)
+                self.already_labelled.extend(random_init_imgs)
 
             #swipe_labeler -> label random set of data -> labelled pos/neg. Returns paths labelled
-            self.already_labelled.extend(random_init_imgs)
             print("Total annotated valset : {} Positive {} Negative".format(get_num_files("eval_pos"),get_num_files('eval_neg')))
             print("Total Labeled Data: Positive {} Negative {}".format(get_num_files("positive"),get_num_files('negative')))
             
