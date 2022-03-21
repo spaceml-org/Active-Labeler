@@ -10,6 +10,8 @@ import re
 import sklearn.metrics as metrics
 import numpy as np
 import datetime 
+import os
+import shutil
 import re
 from imutils import paths
 import global_constants as GConst
@@ -106,7 +108,8 @@ def train_model_vanilla(model, train_datapath, eval_dataset=None, val_dataset=No
                           transforms.Resize((224,224)),
                           transforms.ToTensor(),
                           transforms.Normalize((0, 0, 0),(1, 1, 1))])
-
+  if os.path.exists(os.path.join(train_datapath, 'Unsure')):
+    shutil.rmtree(os.path.join(train_datapath, 'Unsure'))
   
   train_dataset = ImageFolder(train_datapath, transform=t)
   train_imgs = train_dataset.imgs
