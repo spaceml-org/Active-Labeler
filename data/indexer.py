@@ -15,6 +15,7 @@ from torch.utils.data import DataLoader
 import torchvision.datasets as datasets
 import torch
 from PIL import Image
+from copy import deepcopy
 import torch.nn as nn
 
 
@@ -50,7 +51,7 @@ def get_matrix(model, DATA_PATH, image_size=224) -> np.ndarray:
     t = transforms.Compose(
         [transforms.Resize((image_size, image_size)), transforms.Lambda(to_tensor)]
     )
-    inf_model = model.copy()
+    inf_model = deepcopy(model)
     #define output layer
     inf_model.enc.fc = nn.Identity()
 
