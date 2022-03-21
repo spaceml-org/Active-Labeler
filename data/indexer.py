@@ -28,7 +28,7 @@ class Indexer:
         self.imgs = imgs
         self.embeddings = get_matrix(self.model, self.imgs, img_size)
 
-        self.images_list = imgs
+        self.images_list = list(imgs)
         
         if index_path:
             self.index = faiss.read_index(index_path)
@@ -37,7 +37,7 @@ class Indexer:
 
     def process_image(self, img, n_neighbors=5):
         src = get_embedding(self.model, img)
-        scores, neighbours = self.index.search(x=src, k=n_neighbors)
+        scores, neighbours = self.index.search(x=src, k=n_neighbors)[0]
         result = list(self.images_list[neighbours[i]] for i in range(len(neighbours)))
         return result
 
@@ -94,7 +94,7 @@ def get_embedding(model, im):
     datapoint = (
         t(im).unsqueeze(0).cuda() if device == "cuda" else t(im).unsqueeze(0)
     )  # only a single datapoint so we unsqueeze to add a dimension
-    
+
     with torch.no_grad():
         embedding = model(datapoint)  # get_embedding
 
