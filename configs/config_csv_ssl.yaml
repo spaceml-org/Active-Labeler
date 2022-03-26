@@ -36,3 +36,4 @@ active_learner :
   labeler : 
     method : autolabel
     positive_class : airplane
+    
