@@ -13,5 +13,10 @@ def main():
     pipeline.main()                                     
 
 
+def calling_func(config_path):
+    
+    pipeline = Pipeline(config_path= config_path)
+    pipeline.main()
+
 if __name__ == '__main__':
     main()
