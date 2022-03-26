@@ -56,6 +56,11 @@ def load_model(**model_kwargs):
 
         model = ClassifierModel(device, encoder, linear_model)
 
+        if not ssl_config['encoder']['train_encoder']:
+            model.freeze_encoder()
+        else:
+            model.unfreeze_encoder()
+
     else:
         model = model_kwargs['model']
         model_path = model_kwargs['model_path']
