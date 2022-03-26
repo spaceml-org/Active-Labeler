@@ -33,3 +33,6 @@ active_learner :
   num_labelled : 50
   limit : -1
   preindex : False
+  labeler : 
+    method : autolabel
+    positive_class : airplane
