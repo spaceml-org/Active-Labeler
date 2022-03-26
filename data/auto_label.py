@@ -12,11 +12,11 @@ class Labeler:
     def __init__(self, config) -> None:
         
         self.config = config
-        method = self.config['active_learning']['labeler']['method']
+        method = self.config['active_learner']['labeler']['method']
         if method == "swipelabeler":
             self.labeler = SwipeLabeller(self.config)
         elif method == 'autolabel':
-            self.positive_class = self.config['active_learning']['labeler']['positive_class']
+            self.positive_class = self.config['active_learner']['labeler']['positive_class']
         self.method = method
 
     def label(self, paths, is_eval = False):
