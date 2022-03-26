@@ -9,6 +9,9 @@ import shutil
 from tqdm import tqdm
 import global_constants as GConst
 from imutils import paths
+import sys
+sys.path.append('external_lib/SSL/')
+
 from external_lib.SSL.models import SIMCLR, SIMSIAM
 from models.LinearEval import SSLEvaluator, SSLEvaluatorOneLayer
 from models.SSLClassifier import ClassifierModel
