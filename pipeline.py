@@ -22,6 +22,7 @@ import matplotlib.pyplot as plt
 import importlib
 import warnings
 from operator import itemgetter
+from data.auto_label import Labeler
 import global_constants as GConst
 warnings.filterwarnings("ignore")
 sys.path.append('{}/external_lib/SSL/'.format(os.getcwd()))
@@ -56,8 +57,8 @@ class Pipeline:
                           transforms.Resize((224,224)),
                           transforms.ToTensor(),
                           transforms.Normalize((0, 0, 0),(1, 1, 1))])
-        self.sl = SwipeLabeller(self.config)
-
+        
+        self.labeler = Labeler(self.config)
 
     def main(self):
         config = self.config
@@ -120,16 +121,21 @@ class Pipeline:
                 similar_imgs = self.index.process_image(query_image[0], n_neighbors=num_labelled *2) #hardcoding sending only the first image here from query images
                 train_init = similar_imgs[:num_labelled]
                 val_init = similar_imgs[num_labelled:]
-                self.sl.label(train_init, is_eval=False)
-                self.sl.label(val_init, is_eval = True)
+                self.labeler.label(train_init, is_eval = False)
+                self.labeler.label(val_init, is_eval = True)
+                # self.sl.label(train_init, is_eval=False)
+                # self.sl.label(val_init, is_eval = True)
                 self.already_labelled.extend(similar_imgs)
             else:
                 random_init_imgs = unlabelled_paths.sample(num_labelled * 2)[GConst.IMAGE_PATH_COL].values
                 train_init = random_init_imgs[:num_labelled]
                 val_init = random_init_imgs[num_labelled:]
 
-                self.sl.label(train_init, is_eval=False)
-                self.sl.label(val_init, is_eval = True)
+                # self.sl.label(train_init, is_eval=False)
+                # self.sl.label(val_init, is_eval = True)
+
+                self.labeler.label(train_init, is_eval = False)
+                self.labeler.label(val_init, is_eval = True)
                 self.already_labelled.extend(random_init_imgs)
 
 
@@ -172,7 +178,9 @@ class Pipeline:
             logs['ckpt_path'].append(ckpt_path)
             logs['graph_logs'].append(graph_logs)
             low_confs = get_low_conf_unlabeled_batched(model, unlabelled_images, self.already_labelled, **al_kwargs)
-            self.sl.label(low_confs, is_eval = False)
+            # self.sl.label(low_confs, is_eval = False)
+            self.labeler.label(low_confs, is_eval = False)
+
             self.already_labelled.extend(low_confs)
             print("Total Labeled Data: Positive {} Negative {}".format(get_num_files('positive'), get_num_files('negative')))
 
