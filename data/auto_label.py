@@ -7,12 +7,6 @@ from IPython.display import display, Image
 
 from utils import annotate_data
 
-annotations = annotate(
-  ['assets/img_example1.jpg', 'assets/img_example2.jpg'],
-  options=['cat', 'dog', 'horse'],
-  display_fn=lambda filename: display(Image(filename))
-)
-
 class Labeler:
 
     def __init__(self, config) -> None:
