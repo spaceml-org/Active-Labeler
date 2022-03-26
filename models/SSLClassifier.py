@@ -38,12 +38,9 @@ class ClassifierModel(torch.nn.Module):
 
     def forward(self, x):
         """Forward pass of the model"""
-        if self.train_encoder:
-            feats = self.encoder(x)[-1]
-            feats = feats.view(feats.size(0), -1)
-            logits = self.linear_model(feats)
-        else:
-            logits = self.linear_model(x)
+        feats = self.encoder(x)[-1]
+        feats = feats.view(feats.size(0), -1)
+        logits = self.linear_model(feats)
         return logits
     
     def is_frozen(self):

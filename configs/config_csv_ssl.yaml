@@ -4,7 +4,7 @@ model:
     encoder:
       encoder_type: SIMCLR
       encoder_path:  /content/models/SIMCLR_ssl.ckpt
-      e_embedding_size: 2048
+      e_embedding_size: 512
       e_lr: 1e-2
       train_encoder: False
 
@@ -13,7 +13,7 @@ model:
       c_num_classes: 2
       c_hidden_dim: 64
       c_dropout: 0.1
-      c_lr : 1e-6
+      c_lr : 1.0e-6
     
 data:
   dataset : csv
