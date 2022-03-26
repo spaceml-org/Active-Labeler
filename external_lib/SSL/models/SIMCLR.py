@@ -30,14 +30,15 @@ class SIMCLR(SimCLR):
         image_size,
         seed,
         cpus,
+        num_samples,
         transform=SimCLRTransform,
         **simclr_hparams
     ):
 
-        data_temp = ImageFolder(DATA_PATH)
+        # data_temp = ImageFolder(DATA_PATH)
 
         # derived values (not passed in) need to be added to model hparams
-        simclr_hparams["num_samples"] = len(data_temp)
+        simclr_hparams["num_samples"] = num_samples
         simclr_hparams["dataset"] = None
         simclr_hparams["max_epochs"] = simclr_hparams["epochs"]
 
@@ -56,7 +57,6 @@ class SIMCLR(SimCLR):
             if simclr_hparams["gpus"] > 0
             else self.batch_size
         )
-        num_samples = len(data_temp)
         self.train_iters_per_epoch = math.ceil(num_samples / global_batch_size)
         self.projection = Projection(
             input_dim=self.encoder.embedding_size, hidden_dim=self.hidden_dim

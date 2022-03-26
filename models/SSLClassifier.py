@@ -1,5 +1,5 @@
 import torch
-
+from torch import nn
 
 class ClassifierModel(torch.nn.Module):
 
@@ -16,6 +16,8 @@ class ClassifierModel(torch.nn.Module):
         super().__init__()
         # Models
         self.encoder = encoder
+        if self.encoder.fc:
+            self.encoder.fc = nn.Identity()
         self.linear_model = linear_model
         self.train_encoder = True
 
