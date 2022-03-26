@@ -13,7 +13,7 @@ model:
       c_num_classes: 2
       c_hidden_dim: 64
       c_dropout: 0.1
-      c_lr : 1e-6 
+      c_lr : 1e-6
     
 data:
   dataset : csv
@@ -36,4 +36,3 @@ active_learner :
   labeler : 
     method : autolabel
     positive_class : airplane
-    
