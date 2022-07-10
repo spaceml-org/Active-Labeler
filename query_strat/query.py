@@ -1,42 +1,92 @@
-
-import os 
 import numpy as np
-from torchvision import transforms
 from operator import itemgetter
-import torch
+from scipy.stats import entropy
 
-from data.custom_datasets import AL_Dataset
-import query_strat.query_strategies as query_strategies
+'''
+Design notes for custom strategies : 
 
-def get_low_conf_unlabeled_batched(model, image_paths, already_labelled, **al_kwargs):
+Input : 
+confidences:  Confidence values of all the unlabeled images
+number : Number of images to be queried
 
-  strategy = al_kwargs['strategy']
-  num_labelled = al_kwargs['num_labelled']
-  limit = al_kwargs['limit']
+Output :
+Paths of all the intelligently queried images
+'''
 
-  confidences =  []
-  unlabeled_imgs = [os.path.expanduser(img) for img in image_paths if img not in already_labelled]
-  t = transforms.Compose([
-                        transforms.Resize((224,224)),
-                        transforms.ToTensor(),
-                        transforms.Normalize((0, 0, 0),(1, 1, 1))])
- 
-  dataset = AL_Dataset(unlabeled_imgs, limit, t)
-  data_loader = torch.utils.data.DataLoader(dataset, shuffle=False, num_workers=4, batch_size=64) #add num workers arg
+def entropy_based(confidences):
 
-  confidences = {'conf_vals': [],
-                 'loc' : []}
+    print("Using Entropy Based")
 
-  with torch.no_grad():
-    for _, data in enumerate(data_loader):
-      image, loc = data
-      outputs = model(image.to('cuda'))
-      outputs = outputs.detach().cpu().numpy().reshape(-1).tolist()
-      confidences['loc'].extend(loc)
-      confidences['conf_vals'].extend(outputs)
+    entropies = entropy(confidences["conf_vals"], axis = 1)
 
-  confidences['conf_vals'] = np.array(confidences['conf_vals'])
+    entropies = (entropies - entropies.mean()) / entropies.std()
 
-  query_results = getattr(query_strategies, strategy)(confidences, num_labelled)
+    assert len(confidences["loc"]) == len(entropies)
 
-  return query_results
+    # path_to_score = dict(zip(confidences["loc"], entropies))
+
+    return entropies
+
+
+def margin_based(confidences):
+
+    print("Using Margin Based")
+    vals = confidences['conf_vals'].copy()
+
+    max_indices = np.argmax(vals, axis = 1)
+    print("max_indices.shape: ", max_indices.shape)
+    
+    max_vals = []
+
+    counter = 0
+    for index in max_indices:
+
+      max_vals.append(vals[counter, index]) 
+
+      vals[counter, index] = -100
+      counter += 1
+
+    max_vals = np.array(max_vals)
+
+    # print("max_indices: ", max_indices)
+    # max_vals = vals[max_indices]
+
+    # print("max_vals: ", max_vals)
+
+    # print("vals.shape: ", vals.shape)
+    # print("max_vals.shape: ", max_vals.shape)
+    
+
+    # making max to a low number that cannot be reselected
+    # vals[max_indices] = -1
+    second_max_vals = np.max(vals, axis = 1)
+    
+    # print("second_max_vals.shape: ", second_max_vals.shape)
+    
+    # make sure to negate below. Since lower margin is more uncertain
+    difference_array = - (max_vals - second_max_vals)
+
+    difference_array = (difference_array - difference_array.mean()) / difference_array.std()
+
+    assert len(confidences["loc"]) == len(difference_array)
+
+    # path_to_score = dict(zip(confidences["loc"], difference_array))
+
+    print("difference_array.shape: ", difference_array.shape)
+  
+    return difference_array
+
+
+def least_confidence(confidences):
+    
+    print("Using Least Confidence")
+
+    difference_array = 1 - np.max(confidences['conf_vals'], axis = 1)
+
+    difference_array = (difference_array - difference_array.mean()) / difference_array.std()
+    
+    assert len(confidences["loc"]) == len(difference_array)
+
+    # path_to_score = dict(zip(confidences["loc"], difference_array))
+
+    return difference_array

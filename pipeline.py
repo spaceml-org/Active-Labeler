@@ -1,57 +1,34 @@
-from ast import Index
-from copy import copy
-from distutils.command.config import config
-import gc
 import sys
 import os 
-import imutils
-from random import shuffle 
 import pandas as pd
 from imutils import paths 
-import matplotlib.pyplot as plt
-from PIL import Image
-import pathlib
-from pathlib import Path
-import argparse
 import shutil
 from torchvision import transforms
 from torchvision.datasets import ImageFolder
-from torch.utils.data import Dataset
-from sklearn.metrics import confusion_matrix
-import matplotlib.pyplot as plt
-import importlib
+from torch import optim, cuda
 import warnings
-from operator import itemgetter
-from data.auto_label import Labeler
 import global_constants as GConst
 warnings.filterwarnings("ignore")
 sys.path.append('{}/external_lib/SSL/'.format(os.getcwd()))
 
-from utils import (copy_data, load_config, load_model, load_opt_loss, initialise_data_dir, annotate_data, get_num_files)
-from data import resisc
+from utils import (get_num_files, load_config, load_model, load_opt_loss, initialise_data_dir)
 from train.train_model import train_model_vanilla
 from query_strat.query import get_low_conf_unlabeled_batched
-from data.custom_datasets import AL_Dataset, RESISC_Eval
-from data.swipe_labeler import SwipeLabeller
 from data.indexer import Indexer
+from data.label import Labeler
+import data.tfds as tfds_support
 
-def adhoc_copy(unlabelled_paths):
-    imgs = unlabelled_paths['image_paths'].values[:4]
-    for i in range(len(imgs)):
-        if i %2 == 0:
-            shutil.copy(imgs[i], os.path.join(GConst.LABELLED_DIR, 'negative'))
-        else:
-            shutil.copy(imgs[i], os.path.join(GConst.EVAL_DIR, 'negative'))
-    print('ADHOC DONE : ', len(imgs))
+from utils import load_config, load_model, load_opt_loss
+from query_strat.query import get_low_conf_unlabeled_batched
+from data.sample import stratified_sampling
+
 class Pipeline:
 
     def __init__(self, config_path) -> None:
         self.config = load_config(config_path)
-        initialise_data_dir()
-
-        model_kwargs = self.config['model']
-        self.model = load_model(**model_kwargs)
-        self.optim, self.loss = load_opt_loss(self.model, self.config)
+        self.model_kwargs = self.config['model']
+        
+        # self.optim, self.loss = load_opt_loss(self.model, self.config)
         self.already_labelled = list()
         self.transform = transforms.Compose([
                           transforms.Resize((224,224)),
@@ -62,162 +39,144 @@ class Pipeline:
 
     def main(self):
         config = self.config
-        if config['data']['dataset'] == 'resisc':
-            positive_class = config['data']['positive_class']
-            resisc.download_and_prepare()
-            #Initialising data by annotating labelled and eval
-            unlabelled_images = list(paths.list_images(GConst.UNLABELLED_DIR))
-            self.already_labelled = resisc.resisc_annotate(unlabelled_images, 100, self.already_labelled, positive_class, labelled_dir=GConst.EVAL_DIR, val=True) 
-            self.already_labelled = resisc.resisc_annotate(unlabelled_images, 50, self.already_labelled, positive_class, labelled_dir=GConst.LABELLED_DIR)
-            print("Total Eval Data: Positive {} Negative {}".format(get_num_files("eval_pos"),get_num_files('eval_neg')))
-            print("Total Labeled Data: Positive {} Negative {}".format(get_num_files("positive"),get_num_files('negative')))
+        if config['data']['dataset'] == 'tfds':
+            dataset_name = config['data']['dataset_name']
+            dataset_path = os.path.join(os.getcwd(), dataset_name)
+            print("Dataset:", dataset_name)
+            tfds_prepare = tfds_support.PrepareData(dataset_name,config)
+            tfds_prepare.download_and_prepare()
 
-            #Train 
-            eval_dataset = RESISC_Eval(GConst.UNLABELLED_DIR, positive_class)
-            val_dataset = ImageFolder(GConst.EVAL_DIR, transform = self.transform)
+            #Initialising data by annotating labeled
+            unlabeled_images = list(paths.list_images(GConst.UNLABELED_DIR))
+            self.already_labeled = tfds_support.tfds_annotate(unlabeled_images, 1500, self.already_labeled, labeled_dir=GConst.LABELED_DIR)
 
-            train_config = config['train']
-            train_kwargs = dict(epochs = train_config['epochs'],
-                                opt = self.optim,
-                                loss_fn = self.loss, 
-                                batch_size = train_config['batch_size'],
-                                )
+            #Create validation and test dataset objects 
+            val_dataset = ImageFolder(GConst.VAL_DIR, transform=self.transform)
+            test_dataset = ImageFolder(GConst.TEST_DIR, transform = self.transform)
 
             al_config = config['active_learner']
             al_kwargs = dict(
-                            eval_dataset = eval_dataset, 
-                            val_dataset=  val_dataset, 
+                            val_dataset = val_dataset, 
+                            test_dataset=  test_dataset,
                             strategy = al_config['strategy'],
-                            positive_class = positive_class,
+                            diversity_sampling = al_config['diversity_sampling'],
                             num_iters = al_config['iterations'],
-                            num_labelled = al_config['num_labelled'],
+                            num_labeled = al_config['num_labeled'],
                             limit  = al_config['limit']
                             )
-            logs = self.train_al_resisc(self.model, self.already_labelled, unlabelled_images, train_kwargs, **al_kwargs)
-        
+
+            self.train_al(unlabeled_images, **al_kwargs)
+
         elif config['data']['dataset'] == 'csv':
+            # config = airplanes, harbor, cars. 
+            # img_path   label
+            # abc.jpg    airplanes
+            # abc.jpg    harbor 
+            # 1. add to config all classes for annotation 
+            # 2. create a folder for each class available in labelled/ eval folders instead of current pos neg
+            # 3. take query csv, take all possible classes available in query csv and copy to GConst.LABELLED_DIR
+            # 4. do faiss/random sampling and initialsie set and copy over to respective class wise folder. 
+            #csv structure  - , classes
+
+            #tfds flow - 
+            # 1. give name of dataset, init just sets name and takes config
+            # 2. call download_and_prepare - 
+            #   does tf load of dataset first.
+            #   if the folder already doesnt exist, calls tfds_io.
+            #      tfds io takes the entire ds, writes files to unlabeled(train), valid and test based on % split
+            #   val and test is set here. no changes made to it. torch dataset is created after that
+            #   labeled is left empty, and init + annotate is done in a separate tfds annotate step. 
+            # tfds annotate step takes image paths, copies one image of each class to their train folder, then takes a small sample and copies the whole thing
+
 
             self.df = pd.read_csv(config['data']['path'])
+            initialise_data_dir(config)
             df = self.df.copy()
-            query_image = df[df['status'] == 'query'][GConst.IMAGE_PATH_COL].values
-            unlabelled_paths = df[df['status'] != 'query']
-            unlabelled_paths_lis = unlabelled_paths[GConst.IMAGE_PATH_COL].values
+            labeled_df = df[df['label'].isin(config['data']['classes'])]            
+            unlabeled_images = df[df['label'].isna()][GConst.IMAGE_PATH_COL].values
             num_labelled = config['active_learner']['num_labelled']
             self.preindex = self.config['active_learner']['preindex']
             if self.preindex:
-                self.index = Indexer(unlabelled_paths_lis, self.model, img_size=224, 
+                model = load_model(**self.model_kwargs)
+                self.index = Indexer(unlabeled_images, model, img_size=224, 
                                      index_path = None)
-            
-            if len(query_image) > 1:
-                split_ratio = int(0.9 * len(query_image)) #TODO make this an arg
-                annotate_data(query_image[split_ratio:], 'eval_pos')
-                annotate_data(query_image[:split_ratio], 'positive')
+                faiss_init_imgs = list()
+                for label in config['data']['classes']:
+                    print('Indexing Label:', label)
+                    query = labeled_df[labeled_df['label'] == label][GConst.IMAGE_PATH_COL].values[0]
+                    similar_imgs = self.index.process_image(query, n_neighbors=num_labelled *2) 
+                    faiss_init_imgs.extend(similar_imgs)
+
+                faiss_annotate = self.labeler.label(faiss_init_imgs, fetch_paths= True)
+                faiss_annotate = pd.DataFrame(faiss_annotate, columns=[GConst.IMAGE_PATH_COL, 'label'])
+                print("Labeled DF Before : ", labeled_df.shape)
+                labeled_df = labeled_df.append(faiss_annotate)
+                print("Labeled DF After : ", labeled_df.shape)
+                
             else:
-                annotate_data(query_image, 'positive')
-                annotate_data(query_image, 'eval_pos')
+                random_init_imgs = unlabeled_images.sample(num_labelled * 2)[GConst.IMAGE_PATH_COL].values
+                random_annotate = self.labeler.label(random_init_imgs, fetch_paths= True)
+                random_annotate = pd.DataFrame(random_annotate, columns = [GConst.IMAGE_PATH_COL, 'label'])
+                print("Labeled DF Before : ", labeled_df.shape)
+                labeled_df = labeled_df.append(random_annotate)
+                print("Labeled DF After : ", labeled_df.shape)
+
+            self.already_labeled.extend(labeled_df[GConst.IMAGE_PATH_COL].values)
+            labeled_df = stratified_sampling(labeled_df, split_ratio= self.config['active_learner']['init_split_ratio'])
+            train_df = labeled_df[labeled_df['stratified_status'] == 'train']
+            val_df = labeled_df[labeled_df['stratified_status'] == 'val']
+            assert len(val_df['label'].unique()) == len(train_df['label'].unique()), "Val and train have inconsistent labels. Train : {} Val : ".format(train_df['label'].unique(), val_df['label'].unique()) 
             
-            if self.preindex: 
-                #FAISS Fetch
-                similar_imgs = self.index.process_image(query_image[0], n_neighbors=num_labelled *2) #hardcoding sending only the first image here from query images
-                train_init = similar_imgs[:num_labelled]
-                val_init = similar_imgs[num_labelled:]
-                self.labeler.label(train_init, is_eval = False)
-                self.labeler.label(val_init, is_eval = True)
-                # self.sl.label(train_init, is_eval=False)
-                # self.sl.label(val_init, is_eval = True)
-                self.already_labelled.extend(similar_imgs)
-            else:
-                random_init_imgs = unlabelled_paths.sample(num_labelled * 2)[GConst.IMAGE_PATH_COL].values
-                train_init = random_init_imgs[:num_labelled]
-                val_init = random_init_imgs[num_labelled:]
+            self.labeler.annotate_paths(train_df, is_eval=False)
+            self.labeler.annotate_paths(val_df, is_eval=True)
 
-                # self.sl.label(train_init, is_eval=False)
-                # self.sl.label(val_init, is_eval = True)
-
-                self.labeler.label(train_init, is_eval = False)
-                self.labeler.label(val_init, is_eval = True)
-                self.already_labelled.extend(random_init_imgs)
-
+            val_dataset = ImageFolder(GConst.VAL_DIR, transform=self.transform)
 
             #swipe_labeler -> label random set of data -> labelled pos/neg. Returns paths labelled
-            print("Total annotated valset : {} Positive {} Negative".format(get_num_files("eval_pos"),get_num_files('eval_neg')))
-            print("Total Labeled Data: Positive {} Negative {}".format(get_num_files("positive"),get_num_files('negative')))
-            
-            train_config = config['train']    
-            #data is ready ,start training and AL   
-            train_kwargs = dict(epochs = train_config['epochs'],
-                                opt = self.optim,
-                                loss_fn = self.loss, 
-                                batch_size = train_config['batch_size']
-                                )
+            print("Total annotated valset : {}".format(get_num_files('Dataset/Val')))
+            print("Total Labeled Data: {}".format(get_num_files("Dataset/Labeled")))
                                 
             al_config = config['active_learner']
             al_kwargs = dict(
+                            val_dataset = val_dataset, 
                             strategy = al_config['strategy'],
+                            diversity_sampling = al_config['diversity_sampling'],
                             num_iters = al_config['iterations'],
-                            num_labelled = al_config['num_labelled'],
+                            num_labeled = al_config['num_labeled'],
                             limit  = al_config['limit']
                             )
+            self.train_al(unlabeled_images, **al_kwargs)
 
-            adhoc_copy(unlabelled_paths)
-
-            logs = self.train_al(self.model, unlabelled_paths_lis, train_kwargs, **al_kwargs)
-
-
-    def train_al(self, model, unlabelled_images, train_kwargs, **al_kwargs):
-        iter = 0
-        num_iters = al_kwargs['num_iters']
-
-        logs = {'ckpt_path' : [],
-                'graph_logs' : []}
-        
-        while iter < num_iters:
-            print(f'-------------------{iter +1}----------------------')
-            iter+=1
-            ckpt_path, graph_logs = train_model_vanilla(self.model, GConst.LABELLED_DIR, **train_kwargs)
-            logs['ckpt_path'].append(ckpt_path)
-            logs['graph_logs'].append(graph_logs)
-            low_confs = get_low_conf_unlabeled_batched(model, unlabelled_images, self.already_labelled, **al_kwargs)
-            # self.sl.label(low_confs, is_eval = False)
-            self.labeler.label(low_confs, is_eval = False)
-
-            self.already_labelled.extend(low_confs)
-            print("Total Labeled Data: Positive {} Negative {}".format(get_num_files('positive'), get_num_files('negative')))
-
-        return logs
-
-
-
-    def train_al_resisc(self, model, unlabelled_images, train_kwargs, **al_kwargs):
-        iter = 0
-        eval_dataset = al_kwargs['eval_dataset']
+    def train_al(self, unlabeled_images, **al_kwargs):
+        iter1 = 0
         val_dataset = al_kwargs['val_dataset']
+        test_dataset = al_kwargs.get('test_dataset', None)
         num_iters = al_kwargs['num_iters']
-        positive_class = al_kwargs['positive_class']
         
-        logs = {'ckpt_path' : [],
-                'graph_logs': []}
+        train_config = self.config['train']
+        file1 = open(f"logs/{GConst.start_name}_{GConst.diversity_name}.txt","a")
+        file1.write(f"{GConst.start_name}__{GConst.diversity_name}\n")
+        file1.close()
 
-        while iter < num_iters:
-            print(f'-------------------{iter +1}----------------------')
-            iter+=1
-            ckpt_path, graph_logs = train_model_vanilla(self.model, GConst.LABELLED_DIR, eval_dataset, val_dataset, **train_kwargs)
-            logs['ckpt_path'].append(ckpt_path)
-            logs['graph_logs'].append(graph_logs)
-            low_confs = get_low_conf_unlabeled_batched(model, unlabelled_images, self.already_labelled, **al_kwargs)
-            print("Images selected from: ",len(low_confs))
+        while iter1 < num_iters:
+            print(f'-------------------{iter1 +1}----------------------')
+            iter1 += 1
+            model = load_model(**self.model_kwargs)
+            optimizer, loss = load_opt_loss(model, self.config)
+            scheduler = optim.lr_scheduler.StepLR(optimizer, step_size = 1, gamma = 0.925)
+            scaler = cuda.amp.GradScaler()
+
+            train_kwargs = dict(epochs = train_config['epochs'],
+                    opt = optimizer,
+                    loss_fn = loss,
+                    batch_size = train_config['batch_size'],
+                    scheduler = scheduler,
+                    scaler = scaler)
+
+            train_model_vanilla(model, GConst.LABELED_DIR,iter1, val_dataset, test_dataset, **train_kwargs)
+            low_confs = get_low_conf_unlabeled_batched(model, unlabeled_images, self.already_labeled, train_kwargs, **al_kwargs)
             for image in low_confs:
-                if image not in self.already_labelled:
-                    self.already_labelled.append(image)
-                if image.split('/')[-1].split('_')[0] == positive_class:
-                    shutil.copy(image, os.path.join(GConst.LABELLED_DIR,'positive',image.split('/')[-1]))
-                else:
-                    shutil.copy(image, os.path.join(GConst.LABELLED_DIR,'negative',image.split('/')[-1]))
-            print("Total Labeled Data: Positive {} Negative {}".format(get_num_files('positive'), get_num_files('negative')))
-
-        return logs
-
-
-
-
-
+                if image not in self.already_labeled:
+                    self.already_labeled.append(image)
+                    label = image.split('/')[-1].split('_')[0]
+                    shutil.copy(image, os.path.join(GConst.LABELED_DIR,label,image.split('/')[-1]))

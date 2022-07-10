@@ -94,55 +94,26 @@ def load_opt_loss(model, config, is_ssl = False):
 
     return optimizer, loss_fn
 
+def get_num_files(path):
+    return len(paths.list_images(path))
 
-def initialise_data_dir():
-    if os.path.exists('Dataset/Labelled'):
-        shutil.rmtree('Dataset/Labelled')
-    if os.path.exists('Dataset/Eval'):
-        shutil.rmtree('Dataset/Eval')
-    
+def initialise_data_dir(config):
+    if not os.path.exists('Dataset/Labeled'): 
+        os.makedirs('Dataset/Labeled/')
+        for i in range(config['data']['classes']):
+            os.makedirs(f'Dataset/Labeled/{i}')
+
+    if not os.path.exists('Dataset/Val'):
+        os.makedirs('Dataset/Val/')
+        for i in range(config['data']['classes']):
+            os.makedirs(f'Dataset/Val/{i}')
+
     if os.path.exists('checkpoints/'):
-        shutil.rmtree('checkpoints/')      
-
-    if os.path.exists('Dataset/To_Be_Labelled'):
-        shutil.rmtree('Dataset/To_Be_Labelled')
-
-    os.makedirs('Dataset/Labelled/positive/')
-    os.makedirs('Dataset/Labelled/negative/')
-    os.makedirs('Dataset/Eval/positive/')
-    os.makedirs('Dataset/Eval/negative/')
+        shutil.rmtree('checkpoints/')
     os.makedirs('checkpoints/')
-    os.makedirs('Dataset/To_Be_Labelled/')
 
 def copy_data(paths, folder):
     for image in tqdm(paths):
         shutil.copy(image, folder)
     print('Data Copied to {}'.format(folder))
 
-def get_num_files(folder):
-    if folder == "positive":
-        return len(list(paths.list_images(os.path.join(GConst.LABELLED_DIR,'positive'))))
-    elif folder == 'negative':
-        return len(list(paths.list_images(os.path.join(GConst.LABELLED_DIR,'negative'))))
-    elif folder == 'unlabelled':
-        return len(list(paths.list_images(GConst.UNLABELLED_DIR)))
-    elif folder == 'eval_pos':
-        return len(list(paths.list_images(os.path.join(GConst.EVAL_DIR,'positive'))))
-    elif folder == 'eval_neg':
-        return len(list(paths.list_images(os.path.join(GConst.EVAL_DIR,'negative'))))
-    elif folder == 'labelled':
-        return len(list(paths.list_images(GConst.LABELLED_DIR)))
-    elif folder == 'eval_labelled':
-        return len(list(paths.list_images(GConst.EVAL_DIR)))
-        
-def annotate_data(paths, folder):
-    if folder == "positive":
-        copy_data(paths, os.path.join(GConst.LABELLED_DIR,'positive'))
-    elif folder == 'negative':
-        copy_data(paths, os.path.join(GConst.LABELLED_DIR,'negative'))
-    elif folder == 'unlabelled':
-        copy_data(paths, GConst.UNLABELLED_DIR)
-    elif folder == 'eval_pos':
-        copy_data(paths, os.path.join(GConst.EVAL_DIR,'positive'))
-    elif folder == 'eval_neg':
-        copy_data(paths, os.path.join(GConst.EVAL_DIR,'negative'))

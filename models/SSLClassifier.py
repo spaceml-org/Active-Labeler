@@ -36,12 +36,15 @@ class ClassifierModel(torch.nn.Module):
         for param in self.encoder.parameters():
             param.requires_grad = True
 
-    def forward(self, x):
+    def forward(self, x, want_embeddings = False):
         """Forward pass of the model"""
         feats = self.encoder(x)[-1]
         feats = feats.view(feats.size(0), -1)
         logits = self.linear_model(feats)
-        return logits
+        if want_embeddings == True:
+            return logits, feats
+        else:
+            return logits
     
     def is_frozen(self):
         return self.train_encoder
