@@ -1,8 +1,8 @@
 import torch
 from torch import nn
 
-class ClassifierModel(torch.nn.Module):
 
+class ClassifierModel(torch.nn.Module):
     def __init__(self, device, encoder, linear_model):
         """
         Loads the encoder and the linear_model to gpu or cpu
@@ -36,7 +36,7 @@ class ClassifierModel(torch.nn.Module):
         for param in self.encoder.parameters():
             param.requires_grad = True
 
-    def forward(self, x, want_embeddings = False):
+    def forward(self, x, want_embeddings=False):
         """Forward pass of the model"""
         feats = self.encoder(x)[-1]
         feats = feats.view(feats.size(0), -1)
@@ -45,6 +45,6 @@ class ClassifierModel(torch.nn.Module):
             return logits, feats
         else:
             return logits
-    
+
     def is_frozen(self):
         return self.train_encoder

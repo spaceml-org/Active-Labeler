@@ -23,17 +23,17 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 
 
 class Indexer:
-    def __init__(self, imgs, model, img_size=224, index_path = None) -> None:
+    def __init__(self, imgs, model, img_size=224, index_path=None) -> None:
 
         self.model = model
         self.imgs = imgs
         self.embeddings, self.inf_model = get_matrix(self.model, self.imgs, img_size)
 
         self.images_list = list(imgs)
-        
+
         if index_path:
             self.index = faiss.read_index(index_path)
-        else:    
+        else:
             self.index = index_gen(self.embeddings)
 
     def process_image(self, img, n_neighbors=5):
@@ -43,8 +43,8 @@ class Indexer:
         result = list(self.images_list[neighbours[i]] for i in range(len(neighbours)))
         return result
 
-def get_matrix(model, DATA_PATH, image_size=224) -> np.ndarray:
 
+def get_matrix(model, DATA_PATH, image_size=224) -> np.ndarray:
     def to_tensor(pil):
         return torch.tensor(np.array(pil)).permute(2, 0, 1).float()
 
@@ -52,10 +52,10 @@ def get_matrix(model, DATA_PATH, image_size=224) -> np.ndarray:
         [transforms.Resize((image_size, image_size)), transforms.Lambda(to_tensor)]
     )
     inf_model = deepcopy(model)
-    #define output layer
+    # define output layer
     inf_model.enc.fc = nn.Identity()
 
-    dataset = AL_Dataset(DATA_PATH, transform=t, limit = -1)
+    dataset = AL_Dataset(DATA_PATH, transform=t, limit=-1)
     inf_model.eval()
     if device == "cuda":
         inf_model.cuda()
@@ -80,6 +80,7 @@ def index_gen(embeddings):
     faiss.write_index(index, "index.bin")
     print("Index created. Stored as index.bin")
     return index
+
 
 def get_embedding(model, im):
     def to_tensor(pil):

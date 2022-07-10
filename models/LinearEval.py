@@ -1,5 +1,6 @@
 from torch import nn
 
+
 class SSLEvaluator(nn.Module):
     """The classification model which is used with the SSL encoder"""
 
@@ -135,6 +136,7 @@ class SSLEvaluatorOneLayer(nn.Module):
         logits = self.block_forward(x)
         return logits
 
+
 class Flatten(nn.Module):
     def __init__(self):
         super(Flatten, self).__init__()
@@ -142,4 +144,3 @@ class Flatten(nn.Module):
     def forward(self, input_tensor):
         """Forward pass"""
         return input_tensor.view(input_tensor.size(0), -1)
-
