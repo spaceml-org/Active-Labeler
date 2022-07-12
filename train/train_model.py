@@ -134,8 +134,6 @@ def train_model_vanilla(
     graph_logs["len_data"] = []
     for epoch in range(num_epochs):
         epoch_loss = []
-        epoch_acc = []
-        epoch_f1 = []
         num_correct = 0
         total_loss = 0
         model.train()
