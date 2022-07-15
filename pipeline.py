@@ -138,6 +138,7 @@ class Pipeline:
                 print("Labeled DF After : ", labeled_df.shape)
 
             else:
+                print("Number of unlabelled Images:", len(unlabeled_images))
                 random_init_imgs = np.random.choice(unlabeled_images, num_labelled * 2)[
                     GConst.IMAGE_PATH_COL
                 ].values
