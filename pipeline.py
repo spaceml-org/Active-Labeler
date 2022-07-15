@@ -116,7 +116,7 @@ class Pipeline:
             if self.preindex:
                 model = load_model(**self.model_kwargs)
                 self.index = Indexer(
-                    unlabeled_images, model, img_size=224, index_path=None
+                    unlabeled_images[GConst.IMAGE_PATH_COL].values, model, img_size=224, index_path=None
                 )
                 faiss_init_imgs = list()
                 for label in config["data"]["classes"]:
