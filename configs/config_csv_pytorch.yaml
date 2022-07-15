@@ -5,6 +5,11 @@ model:
 data:
   dataset : csv
   path : configs/merced_test.csv
+  classes : ['mediumresidential', 'harbor', 'agricultural', 'overpass',
+       'mobilehomepark', 'river', 'forest', 'golfcourse',
+       'baseballdiamond', 'chaparral', 'runway', 'buildings', 'beach',
+       'parkinglot', 'denseresidential', 'freeway', 'storagetanks',
+       'sparseresidential', 'intersection', 'tenniscourt', 'airplane']
 train:
   optimizer :
     name : SGD
