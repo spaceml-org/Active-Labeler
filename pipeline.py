@@ -109,7 +109,7 @@ class Pipeline:
             df = self.df.copy()
             print("Data Directory Initialised")
             labeled_df = df[df["label"].isin(config["data"]["classes"])]
-            unlabeled_images = df[df["label"].isna()][GConst.IMAGE_PATH_COL].values
+            unlabeled_images = df[df["label"].isna()][GConst.IMAGE_PATH_COL]
             num_labelled = config["active_learner"]["num_labelled"]
             self.preindex = self.config["active_learner"]["preindex"]
             print("Preindex:", self.preindex)
@@ -139,7 +139,7 @@ class Pipeline:
 
             else:
                 print("Number of unlabelled Images:", len(unlabeled_images))
-                random_init_imgs = np.random.choice(unlabeled_images, num_labelled * 2)[
+                random_init_imgs = unlabeled_images.sample(n = (num_labelled * 2))[
                     GConst.IMAGE_PATH_COL
                 ].values
                 random_annotate = self.labeler.label(random_init_imgs, fetch_paths=True)
