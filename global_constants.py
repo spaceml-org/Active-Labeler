@@ -1,6 +1,8 @@
+import os
+
+LABELLED_DIR = "Dataset/Labeled"
 VAL_DIR = "Dataset/Val"
 TEST_DIR = "Dataset/Test"
-UNLABELED_DIR = "Dataset/Unlabeled"
+UNLABELLED_DIR = "Dataset/Unlabeled"
 
-IMAGE_PATH_COL = "image_paths"
-
+IMAGE_PATH_COL = 'image_paths'
