@@ -120,7 +120,7 @@ def get_num_files(path):
 def initialise_data_dir(config):
     if not os.path.exists("Dataset/Labeled"):
         os.makedirs("Dataset/Labeled/")
-        for i in range(config["data"]["classes"]):
+        for i in range(len(config["data"]["classes"])):
             os.makedirs(f"Dataset/Labeled/{i}")
 
     if not os.path.exists("Dataset/Val"):
