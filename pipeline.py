@@ -47,6 +47,12 @@ class Pipeline:
         )
 
         self.labeler = Labeler(self.config)
+        
+        #Set global constants from config
+        setattr(GConst, "start_name", self.config["active_learner"]["strategy"])
+        setattr(GConst, "diversity_name", self.config["active_learner"]["diversity_sampling"])
+        setattr(GConst, "dataset_name", self.config["data"].get("dataset", "csv_dataset"))
+        
 
     def main(self):
         config = self.config
