@@ -37,7 +37,7 @@ class Pipeline:
         self.model_kwargs = self.config["model"]
 
         # self.optim, self.loss = load_opt_loss(self.model, self.config)
-        self.already_labelled = list()
+        self.already_labeled = list()
         self.transform = transforms.Compose(
             [
                 transforms.Resize((224, 224)),
@@ -52,7 +52,7 @@ class Pipeline:
         setattr(GConst, "start_name", self.config["active_learner"]["strategy"])
         setattr(GConst, "diversity_name", self.config["active_learner"]["diversity_sampling"])
         setattr(GConst, "dataset_name", self.config["data"].get("dataset", "csv_dataset"))
-        
+
 
     def main(self):
         config = self.config
