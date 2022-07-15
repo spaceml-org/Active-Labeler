@@ -109,7 +109,7 @@ class Pipeline:
             df = self.df.copy()
             print("Data Directory Initialised")
             labeled_df = df[df["label"].isin(config["data"]["classes"])]
-            unlabeled_images = df[df["label"].isna()][GConst.IMAGE_PATH_COL]
+            unlabeled_images = df[df["label"].isna()]
             num_labelled = config["active_learner"]["num_labelled"]
             self.preindex = self.config["active_learner"]["preindex"]
             print("Preindex:", self.preindex)
