@@ -7,6 +7,7 @@ from torchvision import transforms
 from torchvision.datasets import ImageFolder
 from torch import optim, cuda
 import warnings
+import numpy as np
 import global_constants as GConst
 
 warnings.filterwarnings("ignore")
@@ -106,10 +107,12 @@ class Pipeline:
             self.df = pd.read_csv(config["data"]["path"])
             initialise_data_dir(config)
             df = self.df.copy()
+            print("Data Directory Initialised")
             labeled_df = df[df["label"].isin(config["data"]["classes"])]
             unlabeled_images = df[df["label"].isna()][GConst.IMAGE_PATH_COL].values
             num_labelled = config["active_learner"]["num_labelled"]
             self.preindex = self.config["active_learner"]["preindex"]
+            print("Preindex:", self.preindex)
             if self.preindex:
                 model = load_model(**self.model_kwargs)
                 self.index = Indexer(
@@ -135,7 +138,7 @@ class Pipeline:
                 print("Labeled DF After : ", labeled_df.shape)
 
             else:
-                random_init_imgs = unlabeled_images.sample(num_labelled * 2)[
+                random_init_imgs = np.random.choice(unlabeled_images, num_labelled * 2)[
                     GConst.IMAGE_PATH_COL
                 ].values
                 random_annotate = self.labeler.label(random_init_imgs, fetch_paths=True)
