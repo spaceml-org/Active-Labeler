@@ -19,8 +19,6 @@ active_learner :
   iterations : 30
   strategy : uncertainty_sampling
   num_labelled : 20
+  diversity_sampling : pick_top_n
   limit : -1
   preindex : False
-  labeler : 
-    method : autolabel
-    positive_class : airplane
