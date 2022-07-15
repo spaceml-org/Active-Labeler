@@ -4,7 +4,7 @@ model:
   device  : cuda    
 data:
   dataset : csv
-  path : configs/merced_test.csv
+  path : configs/merced_test_partial.csv
   classes : ['mediumresidential', 'harbor', 'agricultural', 'overpass',
        'mobilehomepark', 'river', 'forest', 'golfcourse',
        'baseballdiamond', 'chaparral', 'runway', 'buildings', 'beach',
