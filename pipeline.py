@@ -226,3 +226,4 @@ class Pipeline:
                         image,
                         os.path.join(GConst.LABELED_DIR, label, image.split("/")[-1]),
                     )
+            

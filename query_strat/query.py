@@ -1,96 +1,88 @@
+import os 
 import numpy as np
+from torchvision import transforms
 from operator import itemgetter
-from scipy.stats import entropy
+from tqdm import tqdm
+import torch
+from query_strat.diversity_sampling import pick_top_n, iterative_proximity_sampling, clustering_sampling, random_sampling
+from query_strat.query_strategies import entropy_based, margin_based, least_confidence
+from data.custom_datasets import AL_Dataset
 
-"""
-Design notes for custom strategies : 
+def get_low_conf_unlabeled_batched(model, image_paths, already_labeled, train_kwargs, **al_kwargs):
 
-Input : 
-confidences:  Confidence values of all the unlabeled images
-number : Number of images to be queried
+  strategy = al_kwargs['strategy']
+  diversity_sampling = al_kwargs['diversity_sampling']
+  num_labeled = al_kwargs['num_labeled']
+  limit = al_kwargs['limit']
 
-Output :
-Paths of all the intelligently queried images
-"""
+  confidences =  []
+  unlabeled_imgs = [os.path.expanduser(img) for img in image_paths if img not in already_labeled]
+  t = transforms.Compose([
+                        transforms.Resize((224,224)),
+                        transforms.ToTensor()])
+ 
+  dataset = AL_Dataset(unlabeled_imgs, limit, t)
+  unlabeled_loader = torch.utils.data.DataLoader(dataset, shuffle=False, num_workers=4, batch_size=64) #add num workers arg
 
+  confidences = {'conf_vals': [],
+                 'loc' : []}
 
-def entropy_based(confidences):
+  batch_bar = tqdm(total=len(unlabeled_loader), dynamic_ncols=True, leave=False, position=0, desc='Get Most Uncertain Samples') 
+  model.eval()
+  all_embeddings = []
 
-    print("Using Entropy Based")
+  with torch.no_grad():
+    for _, (image, loc) in enumerate(unlabeled_loader):
+      
+      outputs, embeddings = model(image.to('cuda'), True)
 
-    entropies = entropy(confidences["conf_vals"], axis=1)
+      outputs = outputs.detach().cpu().numpy()
+      embeddings = embeddings.detach().cpu().numpy()
 
-    entropies = (entropies - entropies.mean()) / entropies.std()
+      all_embeddings.append(embeddings)
+      confidences['loc'].extend(loc)
+      
+      confidences['conf_vals'].append(outputs)
 
-    assert len(confidences["loc"]) == len(entropies)
+      batch_bar.update()
 
-    # path_to_score = dict(zip(confidences["loc"], entropies))
+  batch_bar.close()
 
-    return entropies
-
-
-def margin_based(confidences):
-
-    print("Using Margin Based")
-    vals = confidences["conf_vals"].copy()
-
-    max_indices = np.argmax(vals, axis=1)
-    print("max_indices.shape: ", max_indices.shape)
-
-    max_vals = []
-
-    counter = 0
-    for index in max_indices:
-
-        max_vals.append(vals[counter, index])
-
-        vals[counter, index] = -100
-        counter += 1
-
-    max_vals = np.array(max_vals)
-
-    # print("max_indices: ", max_indices)
-    # max_vals = vals[max_indices]
-
-    # print("max_vals: ", max_vals)
-
-    # print("vals.shape: ", vals.shape)
-    # print("max_vals.shape: ", max_vals.shape)
-
-    # making max to a low number that cannot be reselected
-    # vals[max_indices] = -1
-    second_max_vals = np.max(vals, axis=1)
-
-    # print("second_max_vals.shape: ", second_max_vals.shape)
-
-    # make sure to negate below. Since lower margin is more uncertain
-    difference_array = -(max_vals - second_max_vals)
-
-    difference_array = (
-        difference_array - difference_array.mean()
-    ) / difference_array.std()
-
-    assert len(confidences["loc"]) == len(difference_array)
-
-    # path_to_score = dict(zip(confidences["loc"], difference_array))
-
-    print("difference_array.shape: ", difference_array.shape)
-
-    return difference_array
+  all_embeddings = np.concatenate(all_embeddings)
 
 
-def least_confidence(confidences):
 
-    print("Using Least Confidence")
+  confidences['conf_vals'] = np.concatenate(confidences['conf_vals'])
 
-    difference_array = 1 - np.max(confidences["conf_vals"], axis=1)
+  confidences['loc'] = np.array(confidences['loc'])
 
-    difference_array = (
-        difference_array - difference_array.mean()
-    ) / difference_array.std()
+  if strategy == 'margin_based':
+    uncertainty_scores = margin_based(confidences)
+  elif strategy == 'least_confidence':
+    uncertainty_scores = least_confidence(confidences)
+  elif strategy == 'entropy_based':
+    uncertainty_scores = entropy_based(confidences)
+  elif strategy == 'random_sampling':
+    print("You are using random sampling for your uncertainty criteria.")
+  else:
+    assert False
+    
+  # close to 1 is more uncertain
+  # now take uncertainties and use it to perform diversity sampling.
 
-    assert len(confidences["loc"]) == len(difference_array)
+  if diversity_sampling == "pick_top_n":
+    selected_filepaths = pick_top_n(uncertainty_scores, confidences['loc'], num_labeled)
+  elif diversity_sampling == "iterative_proximity_sampling":
+    selected_filepaths = iterative_proximity_sampling(uncertainty_scores, confidences['loc'], num_labeled, all_embeddings)
+  elif diversity_sampling == "clustering_sampling":
+    selected_filepaths = clustering_sampling(uncertainty_scores, confidences['loc'], num_labeled, all_embeddings)
+  elif diversity_sampling == "random_sampling":
+    selected_filepaths = random_sampling(confidences['loc'], num_labeled)
+  else:
+    assert False
 
-    # path_to_score = dict(zip(confidences["loc"], difference_array))
+  #making sure there are no duplicates. 
+  assert len(selected_filepaths) == len(set(selected_filepaths)), "Duplicates found"
 
-    return difference_array
+  return selected_filepaths
+
