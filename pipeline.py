@@ -84,26 +84,7 @@ class Pipeline:
             self.train_al(unlabeled_images, **al_kwargs)
 
         elif config["data"]["dataset"] == "csv":
-            # config = airplanes, harbor, cars.
-            # img_path   label
-            # abc.jpg    airplanes
-            # abc.jpg    harbor
-            # 1. add to config all classes for annotation
-            # 2. create a folder for each class available in labelled/ eval folders instead of current pos neg
-            # 3. take query csv, take all possible classes available in query csv and copy to GConst.LABELLED_DIR
-            # 4. do faiss/random sampling and initialsie set and copy over to respective class wise folder.
-            # csv structure  - , classes
-
-            # tfds flow -
-            # 1. give name of dataset, init just sets name and takes config
-            # 2. call download_and_prepare -
-            #   does tf load of dataset first.
-            #   if the folder already doesnt exist, calls tfds_io.
-            #      tfds io takes the entire ds, writes files to unlabeled(train), valid and test based on % split
-            #   val and test is set here. no changes made to it. torch dataset is created after that
-            #   labeled is left empty, and init + annotate is done in a separate tfds annotate step.
-            # tfds annotate step takes image paths, copies one image of each class to their train folder, then takes a small sample and copies the whole thing
-
+    
             self.df = pd.read_csv(config["data"]["path"])
             initialise_data_dir(config)
             df = self.df.copy()
