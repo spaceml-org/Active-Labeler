@@ -1,5 +1,6 @@
-from pigeon import annotate
 from IPython.display import display, Image
+import global_constants as GConst
+from pigeon import annotate
 import shutil
 import os
 import tqdm
@@ -24,7 +25,7 @@ class Labeler:
             return annotations
 
     def annotate_paths(self, df, is_eval=False):
-        df_lis = df.to_lis("records")
+        df_lis = df.to_dict("records")
         save_path = "Dataset/Val" if is_eval else "Dataset/Labeled"
-        for path, label in tqdm(df_lis):
-            shutil.copy(path, os.path.join(save_path, label, path.split("/")[-1]))
+        for row in tqdm(df_lis):
+            shutil.copy(row[GConst.IMAGE_PATH_COL], os.path.join(save_path, row[GConst.LABEL_COL], row[GConst.IMAGE_PATH_COL].split("/")[-1]))
