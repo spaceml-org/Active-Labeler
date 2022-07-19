@@ -20,7 +20,7 @@ def get_low_conf_unlabeled_batched(model, image_paths, already_labeled, train_kw
   t = transforms.Compose([
                         transforms.Resize((224,224)),
                         transforms.ToTensor()])
- 
+  
   dataset = AL_Dataset(unlabeled_imgs, limit, t)
   unlabeled_loader = torch.utils.data.DataLoader(dataset, shuffle=False, num_workers=4, batch_size=64) #add num workers arg
 
@@ -65,7 +65,7 @@ def get_low_conf_unlabeled_batched(model, image_paths, already_labeled, train_kw
   elif strategy == 'random_sampling':
     print("You are using random sampling for your uncertainty criteria.")
   else:
-    assert False
+    assert False,"AL Strategy not present"
     
   # close to 1 is more uncertain
   # now take uncertainties and use it to perform diversity sampling.
@@ -79,10 +79,9 @@ def get_low_conf_unlabeled_batched(model, image_paths, already_labeled, train_kw
   elif diversity_sampling == "random_sampling":
     selected_filepaths = random_sampling(confidences['loc'], num_labeled)
   else:
-    assert False
+    assert False, "Diversity Strategy not present"
 
   #making sure there are no duplicates. 
   assert len(selected_filepaths) == len(set(selected_filepaths)), "Duplicates found"
 
   return selected_filepaths
-

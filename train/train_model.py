@@ -70,7 +70,7 @@ def val_model_vanilla(
     )
 
     file1 = open(
-        f"logs/{GConst.DATASET_NAME}_{GConst.start_name}_{GConst.diversity_name}.txt",
+        f"logs/{GConst.start_name}_{GConst.diversity_name}.txt",
         "a",
     )
     file1.write(f"Validation Acc: {(100 * valid_acc):.2f}%" + "\n")
@@ -121,7 +121,7 @@ def train_model_vanilla(
     )
 
     file1 = open(
-        f"logs/{GConst.DATASET_NAME}_{GConst.start_name}_{GConst.diversity_name}.txt",
+        f"logs/{GConst.start_name}_{GConst.diversity_name}.txt",
         "a",
     )
     file1.write(f"--------Iter Num {counter}---------")
@@ -149,8 +149,9 @@ def train_model_vanilla(
             labels = labels.to("cuda")
 
             optimizer.zero_grad()
-
+            #todo use autocast instead of no_grad
             with torch.cuda.amp.autocast():
+            # with torch.no_grad():
                 outputs = model(inputs)
                 loss = loss_fn(outputs, labels)
 
@@ -174,7 +175,7 @@ def train_model_vanilla(
         batch_bar.close()
 
         file1 = open(
-            f"logs/{GConst.DATASET_NAME}_{GConst.start_name}_{GConst.diversity_name}.txt",
+            f"logs/{GConst.start_name}_{GConst.diversity_name}.txt",
             "a",
         )
         file1.write("\n" + f"Epoch: {epoch+1}" + "\n")

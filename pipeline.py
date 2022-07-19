@@ -90,7 +90,7 @@ class Pipeline:
             self.train_al(unlabeled_images, **al_kwargs)
 
         elif config["data"]["dataset"] == "csv":
-    
+            print("CSV Flow")
             self.df = pd.read_csv(config["data"]["path"])
             initialise_data_dir(config)
             df = self.df.copy()
@@ -165,7 +165,7 @@ class Pipeline:
                 strategy=al_config["strategy"],
                 diversity_sampling=al_config["diversity_sampling"],
                 num_iters=al_config["iterations"],
-                num_labeled=al_config["num_labeled"],
+                num_labeled=al_config["num_labelled"],
                 limit=al_config["limit"],
             )
             self.train_al(unlabeled_images, **al_kwargs)
@@ -177,7 +177,7 @@ class Pipeline:
         num_iters = al_kwargs["num_iters"]
 
         train_config = self.config["train"]
-        file1 = open(f"logs/{GConst.start_name}_{GConst.diversity_name}.txt", "a")
+        file1 = open(f"logs/{GConst.start_name}_{GConst.diversity_name}.txt", "w")
         file1.write(f"{GConst.start_name}__{GConst.diversity_name}\n")
         file1.close()
 
@@ -207,14 +207,19 @@ class Pipeline:
                 **train_kwargs,
             )
             low_confs = get_low_conf_unlabeled_batched(
-                model, unlabeled_images, self.already_labeled, train_kwargs, **al_kwargs
+                model, unlabeled_images[GConst.IMAGE_PATH_COL].values, self.already_labeled, train_kwargs, **al_kwargs
             )
-            for image in low_confs:
-                if image not in self.already_labeled:
-                    self.already_labeled.append(image)
-                    label = image.split("/")[-1].split("_")[0]
-                    shutil.copy(
-                        image,
-                        os.path.join(GConst.LABELED_DIR, label, image.split("/")[-1]),
-                    )
             
+            if self.config["data"]["dataset"] == "csv":
+              low_confs = [image for image in low_confs if image not in self.already_labeled]
+              low_confs_annotate = self.labeler.label(low_confs, fetch_paths=False)
+              self.already_labeled.extend(low_confs)
+            elif self.config["data"]["dataset"] == "tfds":
+              for image in low_confs:
+                  if image not in self.already_labeled:
+                      self.already_labeled.append(image)
+                      label = image.split("/")[-1].split("_")[0]
+                      shutil.copy(
+                          image,
+                          os.path.join(GConst.LABELED_DIR, label, image.split("/")[-1]),
+                      )

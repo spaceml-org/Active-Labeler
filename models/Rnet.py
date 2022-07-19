@@ -8,7 +8,7 @@ class Rnet(nn.Module):
         super(Rnet, self).__init__()
         self.enc = torchvision.models.resnet50(pretrained=True)
         self.enc.fc = nn.Identity()
-        self.true_fc = nn.Sequential(nn.Linear(2048, 1, bias=True), nn.Sigmoid())
+        self.true_fc = nn.Sequential(nn.Linear(2048, model_kwargs['num_classes'], bias=True))
 
     def forward(self, x, want_embeddings=False):
         embedding = self.enc(x)
@@ -18,4 +18,5 @@ class Rnet(nn.Module):
         if want_embeddings == True:
             return out, embedding
         else:
+            # return [batch_size] shape instead of [batch_size,1]
             return out

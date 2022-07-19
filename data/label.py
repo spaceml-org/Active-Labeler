@@ -3,7 +3,7 @@ import global_constants as GConst
 from pigeon import annotate
 import shutil
 import os
-import tqdm
+from tqdm import tqdm
 
 
 class Labeler:

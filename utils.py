@@ -114,23 +114,30 @@ def load_opt_loss(model, config, is_ssl=False):
 
 
 def get_num_files(path):
-    return len(paths.list_images(path))
+    return len(list(paths.list_images(path)))
 
 
 def initialise_data_dir(config):
-    if not os.path.exists("Dataset/Labeled"):
-        os.makedirs("Dataset/Labeled/")
-        for i in range(len(config["data"]["classes"])):
-            os.makedirs(f"Dataset/Labeled/{i}")
+    if os.path.exists("Dataset/Labeled"):
+        shutil.rmtree("Dataset/")
+    os.makedirs("Dataset/Labeled/")
+    for i in config["data"]["classes"]:
+        os.makedirs(f"Dataset/Labeled/{i}")
 
-    if not os.path.exists("Dataset/Val"):
-        os.makedirs("Dataset/Val/")
-        for i in range(len(config["data"]["classes"])):
-            os.makedirs(f"Dataset/Val/{i}")
 
+    if os.path.exists("Dataset/Val"):
+        shutil.rmtree("Dataset/")
+    os.makedirs("Dataset/Val/")
+    for i in config["data"]["classes"]:
+        os.makedirs(f"Dataset/Val/{i}")
+    
     if os.path.exists("checkpoints/"):
         shutil.rmtree("checkpoints/")
     os.makedirs("checkpoints/")
+
+    if os.path.exists("logs/"):
+        shutil.rmtree("logs/")
+    os.makedirs('logs/')
 
 
 def copy_data(paths, folder):
