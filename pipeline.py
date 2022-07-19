@@ -7,6 +7,7 @@ from torchvision import transforms
 from torchvision.datasets import ImageFolder
 from torch import optim, cuda
 import warnings
+import numpy as np
 import global_constants as GConst
 
 warnings.filterwarnings("ignore")
@@ -36,7 +37,7 @@ class Pipeline:
         self.model_kwargs = self.config["model"]
 
         # self.optim, self.loss = load_opt_loss(self.model, self.config)
-        self.already_labelled = list()
+        self.already_labeled = list()
         self.transform = transforms.Compose(
             [
                 transforms.Resize((224, 224)),
@@ -46,6 +47,12 @@ class Pipeline:
         )
 
         self.labeler = Labeler(self.config)
+        
+        #Set global constants from config
+        setattr(GConst, "start_name", self.config["active_learner"]["strategy"])
+        setattr(GConst, "diversity_name", self.config["active_learner"]["diversity_sampling"])
+        setattr(GConst, "dataset_name", self.config["data"].get("dataset", "csv_dataset"))
+
 
     def main(self):
         config = self.config
@@ -83,37 +90,20 @@ class Pipeline:
             self.train_al(unlabeled_images, **al_kwargs)
 
         elif config["data"]["dataset"] == "csv":
-            # config = airplanes, harbor, cars.
-            # img_path   label
-            # abc.jpg    airplanes
-            # abc.jpg    harbor
-            # 1. add to config all classes for annotation
-            # 2. create a folder for each class available in labelled/ eval folders instead of current pos neg
-            # 3. take query csv, take all possible classes available in query csv and copy to GConst.LABELLED_DIR
-            # 4. do faiss/random sampling and initialsie set and copy over to respective class wise folder.
-            # csv structure  - , classes
-
-            # tfds flow -
-            # 1. give name of dataset, init just sets name and takes config
-            # 2. call download_and_prepare -
-            #   does tf load of dataset first.
-            #   if the folder already doesnt exist, calls tfds_io.
-            #      tfds io takes the entire ds, writes files to unlabeled(train), valid and test based on % split
-            #   val and test is set here. no changes made to it. torch dataset is created after that
-            #   labeled is left empty, and init + annotate is done in a separate tfds annotate step.
-            # tfds annotate step takes image paths, copies one image of each class to their train folder, then takes a small sample and copies the whole thing
-
+    
             self.df = pd.read_csv(config["data"]["path"])
             initialise_data_dir(config)
             df = self.df.copy()
+            print("Data Directory Initialised")
             labeled_df = df[df["label"].isin(config["data"]["classes"])]
-            unlabeled_images = df[df["label"].isna()][GConst.IMAGE_PATH_COL].values
+            unlabeled_images = df[df["label"].isna()]
             num_labelled = config["active_learner"]["num_labelled"]
             self.preindex = self.config["active_learner"]["preindex"]
+            print("Preindex:", self.preindex)
             if self.preindex:
                 model = load_model(**self.model_kwargs)
                 self.index = Indexer(
-                    unlabeled_images, model, img_size=224, index_path=None
+                    unlabeled_images[GConst.IMAGE_PATH_COL].values, model, img_size=224, index_path=None
                 )
                 faiss_init_imgs = list()
                 for label in config["data"]["classes"]:
@@ -135,7 +125,8 @@ class Pipeline:
                 print("Labeled DF After : ", labeled_df.shape)
 
             else:
-                random_init_imgs = unlabeled_images.sample(num_labelled * 2)[
+                print("Number of unlabelled Images:", len(unlabeled_images))
+                random_init_imgs = unlabeled_images.sample(n = (num_labelled * 2))[
                     GConst.IMAGE_PATH_COL
                 ].values
                 random_annotate = self.labeler.label(random_init_imgs, fetch_paths=True)
@@ -226,3 +217,4 @@ class Pipeline:
                         image,
                         os.path.join(GConst.LABELED_DIR, label, image.split("/")[-1]),
                     )
+            

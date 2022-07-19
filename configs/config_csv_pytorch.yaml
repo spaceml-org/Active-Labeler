@@ -4,7 +4,12 @@ model:
   device  : cuda    
 data:
   dataset : csv
-  path : configs/merced_test.csv
+  path : configs/merced_test_partial.csv
+  classes : ['mediumresidential', 'harbor', 'agricultural', 'overpass',
+       'mobilehomepark', 'river', 'forest', 'golfcourse',
+       'baseballdiamond', 'chaparral', 'runway', 'buildings', 'beach',
+       'parkinglot', 'denseresidential', 'freeway', 'storagetanks',
+       'sparseresidential', 'intersection', 'tenniscourt', 'airplane']
 train:
   optimizer :
     name : SGD
@@ -19,8 +24,6 @@ active_learner :
   iterations : 30
   strategy : uncertainty_sampling
   num_labelled : 20
+  diversity_sampling : pick_top_n
   limit : -1
   preindex : False
-  labeler : 
-    method : autolabel
-    positive_class : airplane
