@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 
 
-def stratified_sampling(df, column_name="", split_ratio=0.9):
+def stratified_sampling(df, column_name="label", split_ratio=0.9):
     """
     Splitting the dataset into groups ( here based on class labels) and \n
     then sampling data into train and test for each group based on split ratio.

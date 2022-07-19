@@ -149,7 +149,7 @@ class Pipeline:
             self.already_labeled.extend(labeled_df[GConst.IMAGE_PATH_COL].values)
             labeled_df = stratified_sampling(
                 labeled_df,
-                split_ratio=self.config["active_learner"]["init_split_ratio"],
+                split_ratio=self.config["active_learner"].get("init_split_ratio",0.9),
             )
             train_df = labeled_df[labeled_df["stratified_status"] == "train"]
             val_df = labeled_df[labeled_df["stratified_status"] == "val"]
