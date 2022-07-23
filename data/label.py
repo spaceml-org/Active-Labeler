@@ -11,11 +11,18 @@ class Labeler:
         self.config = config
 
     def label(self, paths, is_eval=False, fetch_paths=False):
-        annotations = annotate(
-            paths,
-            options=self.config["data"]["classes"],
-            display_fn=lambda filename: display(Image(filename)),
-        )
+        # annotations = annotate(
+        #     paths,
+        #     options=self.config["data"]["classes"],
+        #     display_fn=lambda filename: display(Image(filename)),
+        # )
+        annotations = []
+        for path in paths:
+            path_class = path.split("/")[-2]
+            if path_class == self.config['experiment']['positive_class']:
+                annotations.append([path,'positive'])
+            else:
+                annotations.append([path,'negative'])
         if fetch_paths:
             return annotations
         else:

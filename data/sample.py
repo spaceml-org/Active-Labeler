@@ -22,7 +22,7 @@ def stratified_sampling(df, column_name="label", split_ratio=0.9):
     """
     # df = pd.read_csv(self.input_csv)
     if "stratified_status" not in list(df.columns):
-        df = df.sample(frac=1)  # Shuffle df before assigning status
+        df = df.sample(frac=1).reset_index(drop=True)  # Shuffle df before assigning status
         df["stratified_status"] = ""
 
         for lab in df[column_name].unique():

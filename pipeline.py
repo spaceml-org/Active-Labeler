@@ -154,6 +154,11 @@ class Pipeline:
             self.labeler.annotate_paths(val_df, is_eval=True)
 
             val_dataset = ImageFolder(GConst.VAL_DIR, transform=self.transform)
+            test_dataset = config["active_learner"].get("test_dataset",None)
+            if test_dataset!=None:
+              print("Test dataset present",test_dataset)
+              test_dataset = ImageFolder(GConst.TEST_DIR, transform=self.transform)
+              print("TEST DATASET TYPE",type(test_dataset))
 
             # swipe_labeler -> label random set of data -> labelled pos/neg. Returns paths labelled
             print("Total annotated valset : {}".format(get_num_files("Dataset/Val")))
@@ -167,6 +172,7 @@ class Pipeline:
                 num_iters=al_config["iterations"],
                 num_labeled=al_config["num_labelled"],
                 limit=al_config["limit"],
+                test_dataset = test_dataset
             )
             self.train_al(unlabeled_images, **al_kwargs)
 
@@ -197,7 +203,7 @@ class Pipeline:
                 scheduler=scheduler,
                 scaler=scaler,
             )
-
+            print(f"Dataset Distribution: \nPositive : {len(list(paths.list_images(os.path.join(GConst.LABELED_DIR,'positive'))))} \n Negative : {len(list(paths.list_images(os.path.join(GConst.LABELED_DIR,'negative'))))}")
             train_model_vanilla(
                 model,
                 GConst.LABELED_DIR,

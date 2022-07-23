@@ -2,7 +2,9 @@ model:
   model : Rnet # model and model_path need not be specified if using SSL. i
   model_path : null
   device  : cuda
-  num_classes : 2    
+  num_classes : 2  
+experiment:
+  positive_class : beach  
 data:
   dataset : csv
   path : configs/resisc_test_partial.csv
@@ -16,11 +18,12 @@ train:
   loss_fn :
     name : CrossEntropyLoss
   batch_size : 64
-  epochs : 1
+  epochs : 5
 active_learner :
   iterations : 30
   strategy : margin_based
-  num_labelled : 20
+  num_labelled : 50
   diversity_sampling : pick_top_n
   limit : -1
   preindex : False
+  test_dataset : configs/resisc_full_unlabeled_test.csv

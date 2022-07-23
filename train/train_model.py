@@ -23,7 +23,7 @@ import global_constants as GConst
 def val_model_vanilla(
     model, val_dataset, val_loader, loss_fn, batch_size, last_epoch=False
 ):
-
+    
     epoch_loss = []
     epoch_acc = []
     epoch_f1 = []
@@ -120,6 +120,12 @@ def train_model_vanilla(
         val_dataset, batch_size=batch_size, shuffle=False, num_workers=4
     )
 
+    if test_dataset!=None:
+        test_loader = torch.utils.data.DataLoader(
+        test_dataset, batch_size=batch_size, shuffle=False, num_workers=4
+    )
+
+
     file1 = open(
         f"logs/{GConst.start_name}_{GConst.diversity_name}.txt",
         "a",
@@ -206,3 +212,8 @@ def train_model_vanilla(
             num_correct_val, total_loss_val = val_model_vanilla(
                 model, val_dataset, val_loader, loss_fn, batch_size, last_epoch=False
             )
+    if test_dataset!=None:
+      print("Running on entire unlabelled dataset")
+      num_correct_val, total_loss_val = val_model_vanilla(
+              model, test_dataset, test_loader, loss_fn, batch_size, last_epoch=True
+          )
