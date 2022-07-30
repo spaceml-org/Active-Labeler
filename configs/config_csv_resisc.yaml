@@ -1,5 +1,5 @@
 model:
-  model : Rnet # model and model_path need not be specified if using SSL. i
+  model : Rnet # model and model_path need not be specified if using SSL.
   model_path : null
   device  : cuda
   num_classes : 2    
