@@ -37,27 +37,35 @@ There is a possibility that the samples selected for training are very similar t
     * Randomly selects points irrespective of their uncertainty scores.
 
 
-## Setup
-  
-  explain about tfds, image, csv methods
-  
 ## How to use?
   
-  * For a CLI-Version, simply do:
-   
-  - Clone the code.
-   
-      ```git clone https://github.com/spaceml-org/Active-Labeler.git```
-   
-  - Install requirements.
-
-      ```pip install -r ./Active-Labeler/requirements.txt```
-   
-  - Run the application.
-   
-      ```python3 ./Active-Labeler/main.py  --config_path {path_to_config.yaml} ```
+  * The tool is meant to work on ipython environments to make proper use of the labeller. Refer to <notebook> as a template. 
   
-## Mandatory Arguments
+## Configs
+  
+The pipeline is entirely controlled by yaml config files. 
+There are 4 main keys
 
-__Pipeline Config__: Arguments used by the ```main.py``` present in [```pipeline_config.yaml```]
+| Argument     | Description        | 
+| ------------ | ------------- | 
+|```model```| All model related args|
+|```data```| All data related args |
+|```train```| Model training related args|
+|```active_learner```| Active Learning related args|
+  
+  
+## Citation
+If you find the Active Labeler useful in your research, please consider citing the github code for this tool:
+```
+@code{
+  title={Active Labeler
+},
+author={Muthukrishnan, Subhiksha and Khokhar, Mandeep and Krishnan, Ajay and Narayanan, Tarun and Praveen, Satyarth and Koul, Anirudh}
+  url={https://github.com/spaceml-org/Active-Labeler},
+  year={2021}
+}
+```
+
+</div>
+
   
