@@ -52,8 +52,51 @@ There are 4 main keys
 |```data```| All data related args |
 |```train```| Model training related args|
 |```active_learner```| Active Learning related args|
+ 
+```model```
+| Argument     | Description        | 
+| ------------ | ------------- | 
+|```model```| type of model to be loaded from ```./models/```|
+|```model_path```| Path to the pretrained model weights|
+|```device```| cuda/cpu to load the models and data on|
+|```num_classes```| Number of classes the data should contain|
+|```ssl```| parent key under model to enable the use of SSL models from Self-Supervised Learner|
+
+```ssl```
+| Argument     | Description        | 
+| ------------ | ------------- | 
+|```encoder```| ```encoder_type```: Type of encoder (SIMCLR,SIMSIAM) <br> ```encoder_path```: Path to load the encoder weights <br> ```train_encoder```:Freezes weights if not ```True``` <br> ```e_embedding_size```:Size of encoder's final layer output. <br> ```e_lr```:Learning Rate to be used by the encoder|
+|```classifier```| ```classifier_type```: SSLEvaluator (Multiple FCs)/SSLEvaluatorOneLayer (Single FC) Classifer <br> ```c_num_classes```:Number of classes the data should contain <br> ```c_dropout```:Extent of dropout to be added for the fc layers <br> ```c_hidden_dim```:Hidden Dimension Size <br> ```c_lr```:Learning rate to be used by the classifier|
+|```model_path```| Path to the pretrained model weights|
+
+
   
+```data```
+| Argument     | Description        | 
+| ------------ | ------------- | 
+|```dataset```| type of dataset (csv/tfds)|
+|```path```| Path to the csv or tfds file containing data|
+|```classes```| List of all classes present in the dataset|
   
+```train```
+| Argument     | Description        | 
+| ------------ | ------------- | 
+|```optimizer```| Optimizer to be used in the training loop. Specify the name under ```name``` key within this (Eg.```name```:SGD). Specify all related params under ```config```|
+|```loss_fn```| Loss Funtion to be used in the training loop. Specify the name under ```name``` key within this (Eg.```name```:CrossEntropyLoss)|
+|```batch_size```| Batch size per iteration|
+|```epochs```| Number of epochs per iteration|
+
+```active_learner```
+| Argument     | Description        | 
+| ------------ | ------------- | 
+|```iterations```| Number of active learning iterations.|
+|```strategy```| Uncertainty sampling technique. (Pick between ```margin_based```,```least_confidence```,```entropy_based```,```random_sampling```)|
+|```num_labelled```| Number of samples to be labelled per iteration|
+|```diversity_sampling```| Type of diversity sampling strategy to pick samples with uncertainty sampling. (Pick between ```pick_top_n```,```iterative_proximity_sampling```,```clustering_sampling```,```random_sampling```)|
+|```limit```| -1|
+|```preindex```| Enable preindex (True/False). Preindex - Use FAISS to retreive other similar examples based on every labelled data point.|
+|```test_dataset```| Path to test dataset csv.|
+
 ## Citation
 If you find the Active Labeler useful in your research, please consider citing the github code for this tool:
 ```
